@@ -2,6 +2,7 @@ extends Control
 
 signal level_completed()
 signal back_to_menu_pressed()
+signal next_level_requested()
 
 var level_data: LevelData
 var player_grid: Array = []  # Состояние игрока: 0 - пусто, 1 - закрашено, 2 - помечено крестиком
@@ -50,7 +51,7 @@ func _ready():
 		# Подключаем обработку клика по баннеру
 		victory_banner.gui_input.connect(_on_banner_click)
 	
-	# Получаем уровень от GameManager (будет вызвано после установки данных из game_manager)
+	# Инициализация завершена, данные будут переданы через set_level_data
 
 func set_level_data(data: LevelData):
 	level_data = data
@@ -133,7 +134,6 @@ func _calculate_row_hints() -> Array:
 		for x in range(level_data.grid_size):
 			if level_data.solution[y][x] == 1:
 				count += 1
-			else:
 				if count > 0:
 					row_hint.append(str(count))
 					count = 0
@@ -152,7 +152,6 @@ func _calculate_col_hints() -> Array:
 		for y in range(level_data.grid_size):
 			if level_data.solution[y][x] == 1:
 				count += 1
-			else:
 				if count > 0:
 					col_hint.append(str(count))
 					count = 0
@@ -216,7 +215,6 @@ func _update_grid_visuals():
 					if player_grid[y][x] == 2:
 						button.add_theme_color_override("font_color", Color.WHITE)
 						button.add_theme_font_size_override("font_size", 30)
-					else:
 						button.remove_theme_color_override("font_color")
 
 func get_button(x: int, y: int) -> Button:
@@ -251,7 +249,6 @@ func _check_solution():
 		back_button.disabled = false
 		# Показываем баннер победы
 		show_victory_banner()
-	else:
 		level_label.text = "Неверно, попробуйте еще раз!"
 
 func show_victory_banner():
@@ -281,12 +278,7 @@ func _on_menu_pressed():
 
 func _on_next_level_pressed():
 	# Переходим на следующий уровень
-	var next_index = GameManager.current_level_index + 1
-	if GameManager.has_level(next_index):
-		GameManager.load_level_by_index(next_index)
-	else:
-		# Если уровни закончились, возвращаемся в меню выбора уровней
-		GameManager.load_level_select()
+	next_level_requested.emit()
 
 func _on_back_pressed():
 	back_to_menu_pressed.emit()
