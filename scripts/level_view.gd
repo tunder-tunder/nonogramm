@@ -116,6 +116,10 @@ func _create_grid_ui():
 				button.add_theme_stylebox_override("hover", empty_style)
 				button.add_theme_stylebox_override("pressed", empty_style)
 			
+			# Убираем фокус и текст по умолчанию
+			button.focus_mode = Control.FOCUS_NONE
+			button.text = ""
+			
 			button.gui_input.connect(Callable(self, "_on_cell_gui_input").bind(x, y))
 			grid_container.add_child(button)
 	
@@ -194,25 +198,23 @@ func _update_grid_visuals():
 					# Пустая клетка - БЕЛЫЙ цвет (из темы)
 					style = theme_resource.get_stylebox("empty", "Button")
 					button.text = ""
+					button.remove_theme_color_override("font_color")
 				elif player_grid[y][x] == 1:
-					# Закрашенная клетка - ЧЕРНЫЙ цвет (из темы)
+					# Закрашенная клетка - СИНИЙ цвет (из темы)
 					style = theme_resource.get_stylebox("filled", "Button")
 					button.text = ""
+					button.remove_theme_color_override("font_color")
 				elif player_grid[y][x] == 2:
-					# Крестик - СИНИЙ цвет (из темы)
+					# Крестик - СИНИЙ жирный крестик на белом фоне
 					style = theme_resource.get_stylebox("cross", "Button")
 					button.text = "✕"
+					button.add_theme_color_override("font_color", Color(0, 0.5, 1, 1))
+					button.add_theme_font_size_override("font_size", 40)
 				
 				if style:
 					button.add_theme_stylebox_override("normal", style)
 					button.add_theme_stylebox_override("hover", style)
 					button.add_theme_stylebox_override("pressed", style)
-					
-					# Цвет текста для крестика
-					if player_grid[y][x] == 2:
-						button.add_theme_color_override("font_color", Color.WHITE)
-						button.add_theme_font_size_override("font_size", 30)
-						button.remove_theme_color_override("font_color")
 
 func get_button(x: int, y: int) -> Button:
 	# Находим кнопку по координатам x, y в grid_container
