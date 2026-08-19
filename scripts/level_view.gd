@@ -16,6 +16,9 @@ var grid_container: GridContainer
 @onready var back_button: Button = $BackButton
 @onready var victory_banner: Panel = $VictoryBanner
 @onready var victory_message: Label = $VictoryBanner/VictoryMessage
+@onready var victory_buttons_container: HBoxContainer = $VictoryBanner/VictoryButtonsContainer
+@onready var menu_button: Button = $VictoryBanner/VictoryButtonsContainer/MenuButton
+@onready var next_level_button: Button = $VictoryBanner/VictoryButtonsContainer/NextLevelButton
 
 # Цвета с высоким контрастом
 const COLOR_FILLED = Color(0.0, 0.0, 0.0)      # Черный для закрашенных ЛКМ
@@ -26,6 +29,13 @@ const COLOR_GRID_BORDER = Color(0.0, 0.0, 0.0) # Черные границы
 func _ready():
 	back_button.connect("pressed", _on_back_pressed)
 	check_button.connect("pressed", _on_check_pressed)
+	
+	# Подключаем кнопки баннера победы
+	if menu_button:
+		menu_button.connect("pressed", _on_menu_pressed)
+	if next_level_button:
+		next_level_button.connect("pressed", _on_next_level_pressed)
+	
 	# Скрываем баннер победы при старте
 	if victory_banner:
 		victory_banner.visible = false
@@ -34,6 +44,13 @@ func _ready():
 		victory_message.autowrap_mode = TextServer.AUTOWRAP_WORD
 		victory_message.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		victory_message.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		
+		# Скрываем кнопки изначально (покажем после клика по баннеру)
+		if victory_buttons_container:
+			victory_buttons_container.visible = false
+		
+		# Подключаем обработку клика по баннеру
+		victory_banner.gui_input.connect(_on_banner_click)
 
 func set_level_data(data: LevelData):
 	level_data = data
@@ -145,23 +162,23 @@ func _on_cell_gui_input(event: InputEvent, x: int, y: int):
 		get_viewport().set_input_as_handled()
 		
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			# Левый клик: только закрашивание (0 -> 1 -> 0)
+			# Левый клик: только закрашивание (0 -> 1 -> 0) или с крестика на закрашенный (2 -> 1)
 			if player_grid[y][x] == 0:
 				player_grid[y][x] = 1
+			elif player_grid[y][x] == 1:
+				player_grid[y][x] = 0
 			elif player_grid[y][x] == 2:
 				# Если был крестик, становимся закрашенными
 				player_grid[y][x] = 1
-			else:
-				player_grid[y][x] = 0
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
-			# Правый клик: только крестик (0 -> 2 -> 0) или переключение с закрашенного на крестик
+			# Правый клик: только крестик (0 -> 2 -> 0) или переключение с закрашенного на крестик (1 -> 2)
 			if player_grid[y][x] == 0:
 				player_grid[y][x] = 2
+			elif player_grid[y][x] == 2:
+				player_grid[y][x] = 0
 			elif player_grid[y][x] == 1:
 				# Если была закрашенная, становимся крестиком
 				player_grid[y][x] = 2
-			else:
-				player_grid[y][x] = 0
 		
 		_update_grid_visuals()
 
@@ -213,11 +230,38 @@ func _check_solution():
 		check_button.disabled = true
 		back_button.disabled = false
 		# Показываем баннер победы
-		if victory_banner:
-			victory_banner.visible = true
-			victory_banner.z_index = 100
+		show_victory_banner()
 	else:
 		level_label.text = "Неверно, попробуйте еще раз!"
+
+func show_victory_banner():
+	if victory_banner:
+		victory_banner.visible = true
+		victory_banner.z_index = 100
+		
+		# Скрываем кнопки, ждем клика по баннеру
+		if victory_buttons_container:
+			victory_buttons_container.visible = false
+		
+		# Меняем текст, чтобы подсказать пользователю
+		if victory_message:
+			victory_message.text = "🎉 Победа! 🎉\n(Кликните, чтобы продолжить)"
+
+func _on_banner_click(event: InputEvent):
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if victory_buttons_container and not victory_buttons_container.visible:
+			# Первый клик: показываем кнопки выбора
+			victory_buttons_container.visible = true
+			if victory_message:
+				victory_message.text = "🎉 Поздравляем! 🎉\nВы решили головоломку!"
+
+func _on_menu_pressed():
+	# Сигнал для возврата в главное меню
+	back_to_menu_pressed.emit()
+
+func _on_next_level_pressed():
+	# Сигнал для загрузки следующего уровня (будет обработан в GameManager)
+	level_completed.emit()
 
 func _on_back_pressed():
 	back_to_menu_pressed.emit()
