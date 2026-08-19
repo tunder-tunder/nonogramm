@@ -7,6 +7,7 @@ var level_data: LevelData
 var player_grid: Array = []  # Состояние игрока: 0 - пусто, 1 - закрашено, 2 - помечено крестиком
 var cell_size: int = 60
 var grid_container: GridContainer
+var theme_resource: Theme
 
 @onready var row_hints_container: VBoxContainer = $RowHintsContainer
 @onready var col_hints_container: HBoxContainer = $ColHintsContainer
@@ -20,13 +21,10 @@ var grid_container: GridContainer
 @onready var menu_button: Button = $VictoryBanner/VictoryButtonsContainer/MenuButton
 @onready var next_level_button: Button = $VictoryBanner/VictoryButtonsContainer/NextLevelButton
 
-# Цвета с высоким контрастом
-const COLOR_FILLED = Color(0.0, 0.0, 0.0)      # Черный для закрашенных ЛКМ
-const COLOR_EMPTY = Color(1.0, 1.0, 1.0)       # Белый для пустых
-const COLOR_CROSS = Color(0.0, 0.5, 1.0)       # Синий для отмеченных ПКМ
-const COLOR_GRID_BORDER = Color(0.0, 0.0, 0.0) # Черные границы
-
 func _ready():
+	# Загружаем тему
+	theme_resource = load("res://NonogramTheme.tres")
+	
 	back_button.connect("pressed", _on_back_pressed)
 	check_button.connect("pressed", _on_check_pressed)
 	
@@ -51,6 +49,13 @@ func _ready():
 		
 		# Подключаем обработку клика по баннеру
 		victory_banner.gui_input.connect(_on_banner_click)
+	
+	# Получаем уровень от GameManager
+	if GameManager.has_method("get_current_level_index"):
+		var level_index = GameManager.get_current_level_index()
+		var level_data = GameManager.get_level(level_index)
+		if level_data:
+			set_level_data(level_data)
 
 func set_level_data(data: LevelData):
 	level_data = data
@@ -112,12 +117,18 @@ func _create_grid_ui():
 			button.name = "Cell_%d_%d" % [x, y]
 			button.set_meta("cell_x", x)
 			button.set_meta("cell_y", y)
+			
+			# Применяем начальный стиль (пустая ячейка) из темы
+			var empty_style = theme_resource.get_stylebox("empty", "Button")
+			if empty_style:
+				button.add_theme_stylebox_override("normal", empty_style)
+				button.add_theme_stylebox_override("hover", empty_style)
+				button.add_theme_stylebox_override("pressed", empty_style)
+			
 			button.connect("gui_input", Callable(self, "_on_cell_gui_input").bind(x, y))
 			grid_container.add_child(button)
 	
 	main_grid_container.add_child(grid_container)
-	
-	_update_grid_visuals()
 
 func _calculate_row_hints() -> Array:
 	var hints = []
@@ -187,17 +198,31 @@ func _update_grid_visuals():
 		for x in range(level_data.grid_size):
 			var button = get_button(x, y)
 			if button:
-				# Сбрасываем все стили - пустые клетки всегда белые
-				button.self_modulate = COLOR_EMPTY
-				button.text = ""
-				
-				if player_grid[y][x] == 1:
-					# Закрашенная клетка - черный цвет (ЛКМ)
-					button.self_modulate = COLOR_FILLED
+				var style: StyleBox
+				if player_grid[y][x] == 0:
+					# Пустая клетка - БЕЛЫЙ цвет (из темы)
+					style = theme_resource.get_stylebox("empty", "Button")
+					button.text = ""
+				elif player_grid[y][x] == 1:
+					# Закрашенная клетка - ЧЕРНЫЙ цвет (из темы)
+					style = theme_resource.get_stylebox("filled", "Button")
+					button.text = ""
 				elif player_grid[y][x] == 2:
-					# Крестик - синий цвет (ПКМ)
-					button.self_modulate = COLOR_CROSS
+					# Крестик - СИНИЙ цвет (из темы)
+					style = theme_resource.get_stylebox("cross", "Button")
 					button.text = "✕"
+				
+				if style:
+					button.add_theme_stylebox_override("normal", style)
+					button.add_theme_stylebox_override("hover", style)
+					button.add_theme_stylebox_override("pressed", style)
+					
+					# Цвет текста для крестика
+					if player_grid[y][x] == 2:
+						button.add_theme_color_override("font_color", Color.WHITE)
+						button.add_theme_font_size_override("font_size", 30)
+					else:
+						button.remove_theme_color_override("font_color")
 
 func get_button(x: int, y: int) -> Button:
 	# Находим кнопку по координатам x, y в grid_container
@@ -260,8 +285,13 @@ func _on_menu_pressed():
 	back_to_menu_pressed.emit()
 
 func _on_next_level_pressed():
-	# Сигнал для загрузки следующего уровня (будет обработан в GameManager)
-	level_completed.emit()
+	# Переходим на следующий уровень
+	var next_index = GameManager.current_level_index + 1
+	if GameManager.has_level(next_index):
+		GameManager.load_level_by_index(next_index)
+	else:
+		# Если уровни закончились, возвращаемся в меню выбора уровней
+		GameManager.load_level_select()
 
 func _on_back_pressed():
 	back_to_menu_pressed.emit()

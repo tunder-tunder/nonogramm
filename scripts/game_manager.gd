@@ -1,8 +1,16 @@
 extends Node
 
 var current_scene: Node = null
+var current_level_index: int = 0
+var level_resources: Array = []
 
 func _ready():
+	# Предзагружаем все уровни
+	level_resources = [
+		preload("res://levels/level_1.tres"),
+		preload("res://levels/level_2.tres")
+	]
+	
 	# Создаем главное меню при старте
 	load_main_menu()
 
@@ -28,11 +36,19 @@ func load_level_select():
 	
 	# Подключаемся к сигналу выбора уровня
 	if level_select_scene.has_signal("level_selected"):
-		level_select_scene.connect("level_selected", load_level)
+		level_select_scene.connect("level_selected", load_level_by_index)
 	
 	# Кнопка назад в меню (если есть)
 	if level_select_scene.has_signal("back_to_menu_pressed"):
 		level_select_scene.connect("back_to_menu_pressed", load_main_menu)
+
+func load_level_by_index(index: int):
+	current_level_index = index
+	if index >= 0 and index < level_resources.size():
+		load_level(level_resources[index])
+	else:
+		print("Уровень с индексом ", index, " не найден!")
+		load_main_menu()
 
 func load_level(level_data: Resource):
 	if current_scene:
@@ -54,5 +70,16 @@ func load_level(level_data: Resource):
 		level_scene.connect("back_to_menu_pressed", load_main_menu)
 
 func _on_level_completed():
-	# После победы переходим на следующий уровень или в меню выбора
-	load_level_select()
+	# Сигнал победы - ничего не делаем, ждем действий игрока через баннер
+	pass
+
+func get_current_level_index() -> int:
+	return current_level_index
+
+func get_level(index: int) -> Resource:
+	if index >= 0 and index < level_resources.size():
+		return level_resources[index]
+	return null
+
+func has_level(index: int) -> bool:
+	return index >= 0 and index < level_resources.size()
