@@ -38,3 +38,6 @@ cornerRadius_bottom_left = 2
 
 [resource]
 theme_name = "NonogramTheme"
+Button/empty = SubResource("StyleBoxFlat_empty")
+Button/filled = SubResource("StyleBoxFlat_filled")
+Button/cross = SubResource("StyleBoxFlat_cross")

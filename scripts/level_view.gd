@@ -50,12 +50,7 @@ func _ready():
 		# Подключаем обработку клика по баннеру
 		victory_banner.gui_input.connect(_on_banner_click)
 	
-	# Получаем уровень от GameManager
-	if GameManager.has_method("get_current_level_index"):
-		var level_index = GameManager.get_current_level_index()
-		var level_data = GameManager.get_level(level_index)
-		if level_data:
-			set_level_data(level_data)
+	# Получаем уровень от GameManager (будет вызвано после установки данных из game_manager)
 
 func set_level_data(data: LevelData):
 	level_data = data
@@ -125,7 +120,7 @@ func _create_grid_ui():
 				button.add_theme_stylebox_override("hover", empty_style)
 				button.add_theme_stylebox_override("pressed", empty_style)
 			
-			button.connect("gui_input", Callable(self, "_on_cell_gui_input").bind(x, y))
+			button.gui_input.connect(Callable(self, "_on_cell_gui_input").bind(x, y))
 			grid_container.add_child(button)
 	
 	main_grid_container.add_child(grid_container)
