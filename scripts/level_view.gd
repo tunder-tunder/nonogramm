@@ -198,16 +198,21 @@ func _update_grid_visuals():
 					# Пустая клетка - БЕЛЫЙ цвет (из темы)
 					style = theme_resource.get_stylebox("empty", "Button")
 					button.text = ""
+					# Сбрасываем цвет шрифта
 					button.remove_theme_color_override("font_color")
+					button.remove_theme_font_size_override("font_size")
 				elif player_grid[y][x] == 1:
 					# Закрашенная клетка - СИНИЙ цвет (из темы)
 					style = theme_resource.get_stylebox("filled", "Button")
 					button.text = ""
+					# Сбрасываем цвет шрифта
 					button.remove_theme_color_override("font_color")
+					button.remove_theme_font_size_override("font_size")
 				elif player_grid[y][x] == 2:
 					# Крестик - СИНИЙ жирный крестик на белом фоне
 					style = theme_resource.get_stylebox("cross", "Button")
 					button.text = "✕"
+					# Устанавливаем синий цвет для крестика
 					button.add_theme_color_override("font_color", Color(0, 0.5, 1, 1))
 					button.add_theme_font_size_override("font_size", 40)
 				
