@@ -68,10 +68,10 @@ func _update_grid_visuals():
 		for x in range(level_data.grid_size):
 			var button = grid_container.get_node("Cell_%d_%d" % [x, y])
 			if player_grid[y][x] == 1:
-				button.color = Color(0.2, 0.6, 1.0)  # Синий цвет для закрашенных
+				button.self_modulate = Color(0.2, 0.6, 1.0)  # Синий цвет для закрашенных
 				button.text = ""
 			else:
-				button.color = Color(0.8, 0.8, 0.8)  # Серый для пустых
+				button.self_modulate = Color(0.8, 0.8, 0.8)  # Серый для пустых
 				button.text = ""
 
 func _on_check_pressed():
