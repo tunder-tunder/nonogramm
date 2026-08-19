@@ -54,6 +54,5 @@ func load_level(level_data: Resource):
 		level_scene.connect("back_to_menu_pressed", load_main_menu)
 
 func _on_level_completed():
-	# Пока просто возвращаемся в меню после победы
-	# В будущем можно сделать переход на следующий уровень
+	# После победы переходим на следующий уровень или в меню выбора
 	load_level_select()
