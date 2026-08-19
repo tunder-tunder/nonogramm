@@ -1,4 +1,4 @@
-[gd_scene load_steps=1 format=3 uid="uid://main"]
+[gd_scene format=3 uid="uid://main"]
 
 [ext_resource type="Script" path="res://scripts/game_manager.gd" id="1_game_manager"]
 
