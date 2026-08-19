@@ -1,0 +1,48 @@
+```
+# Godot-specific ignores
+.addons/
+.cache/
+.import/
+.project
+.user
+.tscn.meta
+.gd.meta
+.svg.meta
+.godot/
+
+# Compiled and build artifacts
+*.import
+*.meta
+
+# Temporary files
+*.tmp
+*.temp
+*.backup
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Dependencies (if any)
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.egg-info/
+dist/
+build/
+target/
+.gradle/
+.mypy_cache/
+.pytest_cache/
+```
