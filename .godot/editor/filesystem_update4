@@ -1,5 +1,3 @@
-res://scenes/level.tscn
-res://scripts/level_view.gd
-res://Main.tscn
 res://scripts/game_manager.gd
-res://levels/level_1.tres
+res://scripts/level_view.gd
+res://scenes/level.tscn
