@@ -68,12 +68,7 @@ func set_level_data(data: LevelData):
 	_create_grid_ui()
 
 func _create_grid_ui():
-	# Очищаем предыдущие элементы
 	for child in main_grid_container.get_children():
-		child.queue_free()
-	for child in row_hints_container.get_children():
-		child.queue_free()
-	for child in col_hints_container.get_children():
 		child.queue_free()
 	
 	# Создаем основной контейнер сетки
@@ -134,6 +129,7 @@ func _calculate_row_hints() -> Array:
 		for x in range(level_data.grid_size):
 			if level_data.solution[y][x] == 1:
 				count += 1
+			else:
 				if count > 0:
 					row_hint.append(str(count))
 					count = 0
@@ -152,6 +148,7 @@ func _calculate_col_hints() -> Array:
 		for y in range(level_data.grid_size):
 			if level_data.solution[y][x] == 1:
 				count += 1
+			else:
 				if count > 0:
 					col_hint.append(str(count))
 					count = 0
