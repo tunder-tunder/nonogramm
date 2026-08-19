@@ -1,7 +1,5 @@
 extends Node
 
-signal scene_changed(new_scene: Node)
-
 var current_scene: Node = null
 
 func _ready():

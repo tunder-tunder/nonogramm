@@ -15,6 +15,7 @@ var grid_container: GridContainer
 @onready var check_button: Button = $CheckButton
 @onready var back_button: Button = $BackButton
 @onready var victory_banner: Panel = $VictoryBanner
+@onready var victory_message: Label = $VictoryBanner/VictoryMessage
 
 # Цвета с высоким контрастом
 const COLOR_FILLED = Color(0.0, 0.0, 0.0)      # Черный для закрашенных ЛКМ
@@ -28,6 +29,11 @@ func _ready():
 	# Скрываем баннер победы при старте
 	if victory_banner:
 		victory_banner.visible = false
+		# Настраиваем размеры для корректного отображения текста
+		victory_banner.custom_minimum_size = Vector2(400, 150)
+		victory_message.autowrap_mode = TextServer.AUTOWRAP_WORD
+		victory_message.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		victory_message.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 func set_level_data(data: LevelData):
 	level_data = data
@@ -89,7 +95,7 @@ func _create_grid_ui():
 			button.name = "Cell_%d_%d" % [x, y]
 			button.set_meta("cell_x", x)
 			button.set_meta("cell_y", y)
-			button.connect("gui_input", _on_cell_gui_input.bind(x, y))
+			button.connect("gui_input", Callable(self, "_on_cell_gui_input").bind(x, y))
 			grid_container.add_child(button)
 	
 	main_grid_container.add_child(grid_container)
@@ -139,19 +145,21 @@ func _on_cell_gui_input(event: InputEvent, x: int, y: int):
 		get_viewport().set_input_as_handled()
 		
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			# Левый клик: цикл 0 -> 1 -> 2 -> 0 (пусто -> черный -> синий крестик -> пусто)
+			# Левый клик: только закрашивание (0 -> 1 -> 0)
 			if player_grid[y][x] == 0:
 				player_grid[y][x] = 1
-			elif player_grid[y][x] == 1:
-				player_grid[y][x] = 2
+			elif player_grid[y][x] == 2:
+				# Если был крестик, становимся закрашенными
+				player_grid[y][x] = 1
 			else:
 				player_grid[y][x] = 0
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
-			# Правый клик: цикл 0 -> 2 -> 1 -> 0 (пусто -> синий крестик -> черный -> пусто)
+			# Правый клик: только крестик (0 -> 2 -> 0) или переключение с закрашенного на крестик
 			if player_grid[y][x] == 0:
 				player_grid[y][x] = 2
-			elif player_grid[y][x] == 2:
-				player_grid[y][x] = 1
+			elif player_grid[y][x] == 1:
+				# Если была закрашенная, становимся крестиком
+				player_grid[y][x] = 2
 			else:
 				player_grid[y][x] = 0
 		
@@ -162,7 +170,7 @@ func _update_grid_visuals():
 		for x in range(level_data.grid_size):
 			var button = get_button(x, y)
 			if button:
-				# Сбрасываем все стили
+				# Сбрасываем все стили - пустые клетки всегда белые
 				button.self_modulate = COLOR_EMPTY
 				button.text = ""
 				
@@ -207,6 +215,7 @@ func _check_solution():
 		# Показываем баннер победы
 		if victory_banner:
 			victory_banner.visible = true
+			victory_banner.z_index = 100
 	else:
 		level_label.text = "Неверно, попробуйте еще раз!"
 
