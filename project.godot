@@ -3,17 +3,20 @@
 ; since the parameters that go here are not all obvious.
 ;
 ; Format:
-;   [section_name]
-;   key = value
-;
-; About the project:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
 config_version=5
+
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
 config/name="Nonogram Game"
 run/main_scene="res://Main.tscn"
-config/features=PackedStringArray("4.2", "Forward Plus")
+config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 
 [display]
@@ -29,42 +32,6 @@ click={
 ]
 }
 
-[layer_names]
-
-2d_physics/layer_1=""
-2d_physics/layer_2=""
-2d_physics/layer_3=""
-2d_physics/layer_4=""
-2d_physics/layer_5=""
-2d_physics/layer_6=""
-2d_physics/layer_7=""
-2d_physics/layer_8=""
-2d_physics/layer_9=""
-2d_physics/layer_10=""
-2d_physics/layer_11=""
-2d_physics/layer_12=""
-2d_physics/layer_13=""
-2d_physics/layer_14=""
-2d_physics/layer_15=""
-2d_physics/layer_16=""
-3d_physics/layer_1=""
-3d_physics/layer_2=""
-3d_physics/layer_3=""
-3d_physics/layer_4=""
-3d_physics/layer_5=""
-3d_physics/layer_6=""
-3d_physics/layer_7=""
-3d_physics/layer_8=""
-3d_physics/layer_9=""
-3d_physics/layer_10=""
-3d_physics/layer_11=""
-3d_physics/layer_12=""
-3d_physics/layer_13=""
-3d_physics/layer_14=""
-3d_physics/layer_15=""
-3d_physics/layer_16=""
-
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0
-renderer/rendering_method="forward_plus"
