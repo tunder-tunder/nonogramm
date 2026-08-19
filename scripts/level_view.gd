@@ -16,10 +16,10 @@ var hint_font_size: int = 16
 @onready var victory_banner: Control = $VictoryBanner  # Баннер победы
 
 # Цвета с высоким контрастом
-const COLOR_FILLED = Color(0.0, 0.0, 0.0)  # Черный для закрашенных
-const COLOR_EMPTY = Color(1.0, 1.0, 1.0)   # Белый для пустых
-const COLOR_CROSS = Color(0.8, 0.8, 0.8)   # Серый для крестика
-const COLOR_GRID_BORDER = Color(0.0, 0.0, 0.0)  # Черные границы
+const COLOR_FILLED = Color(0.0, 0.0, 0.0)      # Черный для закрашенных ЛКМ
+const COLOR_EMPTY = Color(1.0, 1.0, 1.0)       # Белый для пустых
+const COLOR_CROSS = Color(0.0, 0.5, 1.0)       # Синий для отмеченных ПКМ
+const COLOR_GRID_BORDER = Color(0.0, 0.0, 0.0) # Черные границы
 
 func _ready():
 	back_button.connect("pressed", _on_back_pressed)
@@ -61,8 +61,10 @@ func _create_grid_ui():
 			button.position = Vector2(start_offset.x + x * cell_size + 5, start_offset.y + y * cell_size + 5)
 			button.size = Vector2(cell_size - 10, cell_size - 10)
 			button.name = "Cell_%d_%d" % [x, y]
+			button.set_meta("cell_x", x)
+			button.set_meta("cell_y", y)
 			button.connect("pressed", _on_cell_left_clicked.bind(x, y))
-			button.connect("gui_input", _on_cell_gui_input.bind(x, y))
+			button.connect("gui_input", _on_cell_gui_input)
 			grid_container.add_child(button)
 	
 	_update_grid_visuals()
@@ -147,26 +149,35 @@ func _on_cell_left_clicked(x: int, y: int):
 	
 	_update_grid_visuals()
 
-func _on_cell_gui_input(x: int, y: int, event: InputEvent):
-	# Правый клик: постановка крестика
+func _on_cell_gui_input(event: InputEvent):
+	# Правый клик: постановка синего крестика
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 		get_viewport().set_input_as_handled()
-		if player_grid[y][x] == 0:
-			player_grid[y][x] = 2
-		elif player_grid[y][x] == 2:
-			player_grid[y][x] = 0
-		_update_grid_visuals()
+		# Находим кнопку по позиции мыши
+		var mouse_pos = get_global_mouse_position()
+		for y in range(level_data.grid_size):
+			for x in range(level_data.grid_size):
+				var button = grid_container.get_node_or_null("Cell_%d_%d" % [x, y])
+				if button:
+					var rect = Rect2(button.position, button.size)
+					if rect.has_point(mouse_pos):
+						if player_grid[y][x] == 0:
+							player_grid[y][x] = 2
+						elif player_grid[y][x] == 2:
+							player_grid[y][x] = 0
+						_update_grid_visuals()
+						return
 
 func _update_grid_visuals():
 	for y in range(level_data.grid_size):
 		for x in range(level_data.grid_size):
 			var button = grid_container.get_node("Cell_%d_%d" % [x, y])
 			if player_grid[y][x] == 1:
-				# Закрашенная клетка - черный цвет
+				# Закрашенная клетка - черный цвет (ЛКМ)
 				button.self_modulate = COLOR_FILLED
 				button.text = ""
 			elif player_grid[y][x] == 2:
-				# Крестик - серый фон с символом X
+				# Крестик - синий цвет (ПКМ)
 				button.self_modulate = COLOR_CROSS
 				button.text = "✕"
 			else:
