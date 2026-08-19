@@ -1,20 +1,3 @@
-```
-# Godot-specific ignores
-*.import
-*.uid
-.project
+# Godot 4+ specific ignores
 .godot/
-
-# Dependencies
-res://addons/
-
-# Build artifacts
-export_presets.cfg
-
-# Logs
-*.log
-
-# Temporary files
-*.tmp
-*.temp
-```
+/android/
