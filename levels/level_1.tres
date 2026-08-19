@@ -1,9 +1,8 @@
-[gd_resource type="Resource" format=3 uid="uid://level1"]
+[gd_resource type="Resource" script_class="LevelData" format=3 uid="uid://level1"]
 
-[ext_resource type="Script" path="res://scripts/level_data.gd" id="1_level_data"]
+[ext_resource type="Script" uid="uid://dds5oq2h5loql" path="res://scripts/level_data.gd" id="1_level_data"]
 
 [resource]
 script = ExtResource("1_level_data")
 level_name = "Уровень 1"
-grid_size = 5
 solution = [[1, 1, 1, 1, 1], [0, 0, 1, 0, 0], [0, 0, 1, 0, 0], [0, 0, 1, 0, 0], [0, 0, 1, 0, 0]]

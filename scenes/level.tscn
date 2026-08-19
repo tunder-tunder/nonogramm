@@ -1,8 +1,8 @@
-[gd_scene format=3 uid="uid://level_scene"]
+[gd_scene format=3 uid="uid://d3vorcaae8vlj"]
 
-[ext_resource type="Script" path="res://scripts/level_view.gd" id="1_level_view"]
+[ext_resource type="Script" uid="uid://mwovji3jfybr" path="res://scripts/level_view.gd" id="1_level_view"]
 
-[node name="LevelScene" type="Control"]
+[node name="LevelScene" type="Control" unique_id=1590877809]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,9 +11,9 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_level_view")
 
-[node name="LevelLabel" type="Label" parent="."]
+[node name="LevelLabel" type="Label" parent="." unique_id=1368620117]
 layout_mode = 1
-anchors_preset = 10
+anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -150.0
@@ -24,7 +24,7 @@ grow_horizontal = 2
 text = "Уровень"
 horizontal_alignment = 1
 
-[node name="MainGridContainer" type="GridContainer" parent="."]
+[node name="MainGridContainer" type="GridContainer" parent="." unique_id=1032364850]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -39,15 +39,13 @@ grow_horizontal = 2
 grow_vertical = 2
 columns = 6
 
-[node name="RowHintsContainer" type="VBoxContainer" parent="."]
+[node name="RowHintsContainer" type="VBoxContainer" parent="." unique_id=223781248]
 layout_mode = 1
-visible = false
 
-[node name="ColHintsContainer" type="HBoxContainer" parent="."]
+[node name="ColHintsContainer" type="HBoxContainer" parent="." unique_id=91649048]
 layout_mode = 1
-visible = false
 
-[node name="CheckButton" type="Button" parent="."]
+[node name="CheckButton" type="Button" parent="." unique_id=1404238785]
 layout_mode = 1
 anchors_preset = 7
 anchor_left = 0.5
@@ -62,16 +60,16 @@ grow_horizontal = 2
 grow_vertical = 0
 text = "Проверить"
 
-[node name="BackButton" type="Button" parent="."]
+[node name="BackButton" type="Button" parent="." unique_id=986215909]
 layout_mode = 1
-anchors_preset = 0
 offset_left = 10.0
 offset_top = 10.0
 offset_right = 90.0
 offset_bottom = 40.0
 text = "Назад"
 
-[node name="VictoryBanner" type="Panel" parent="."]
+[node name="VictoryBanner" type="Panel" parent="." unique_id=984667578]
+visible = false
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -84,9 +82,8 @@ offset_right = 200.0
 offset_bottom = 100.0
 grow_horizontal = 2
 grow_vertical = 2
-visible = false
 
-[node name="VictoryMessage" type="Label" parent="VictoryBanner"]
+[node name="VictoryMessage" type="Label" parent="VictoryBanner" unique_id=1890087718]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0

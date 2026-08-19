@@ -1,0 +1,17 @@
+78098b89c88a74ebe8c20117b8754620
+::res://::1787136360
+icon.svg::CompressedTexture2D::7310440002566517389::1787128511::1787128548::1::::<><><>0<>0<>e1e0c6ef1ccee32436cf505986724584<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
+Main.tscn::PackedScene::471933::1787129534::0::1::::<><><>0<>0<><>::res://scripts/game_manager.gd
+README.md::TextFile::-1::1787128511::0::1::::<><><>0<>0<><>::
+::res://levels/::1787129534
+level_1.tres::Resource::505965416::1787129534::0::1::::<><><>0<>0<><>::res://scripts/level_data.gd
+::res://scenes/::1787129534
+level.tscn::PackedScene::-1::1787129534::0::1::::<><><>0<>0<><>::res://scripts/level_view.gd
+level_select.tscn::PackedScene::-1::1787129534::0::1::::<><><>0<>0<><>::res://scripts/level_select.gd
+main_menu.tscn::PackedScene::-1::1787129534::0::1::::<><><>0<>0<><>::res://scripts/main_menu.gd
+::res://scripts/::1787129534
+game_manager.gd::GDScript::2235312413856947459::1787128511::0::1::::<>Node<><>0<>0<><>::
+level_data.gd::GDScript::7408834774906047419::1787128511::0::1::::LevelData<>Resource<><>0<>0<><>::
+level_select.gd::GDScript::639404521630047600::1787129534::0::1::::<>Control<><>0<>0<><>::
+level_view.gd::GDScript::888570460169466827::1787129534::0::1::::<>Control<><>0<>0<><>::
+main_menu.gd::GDScript::930066377269087408::1787128511::0::1::::<>Control<><>0<>0<><>::
