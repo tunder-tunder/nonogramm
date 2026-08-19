@@ -6,14 +6,14 @@ signal back_to_menu_pressed()
 var level_data: LevelData
 var player_grid: Array = []  # Состояние игрока: 0 - пусто, 1 - закрашено, 2 - помечено крестиком
 var cell_size: int = 60
-var start_offset: Vector2 = Vector2(80, 80)  # Смещение для размещения подсказок
-var hint_font_size: int = 16
 
-@onready var grid_container: Control = $GridContainer
+@onready var row_hints_container: VBoxContainer = $RowHintsContainer
+@onready var col_hints_container: HBoxContainer = $ColHintsContainer
+@onready var main_grid_container: GridContainer = $MainGridContainer
 @onready var level_label: Label = $LevelLabel
 @onready var check_button: Button = $CheckButton
 @onready var back_button: Button = $BackButton
-@onready var victory_banner: Control = $VictoryBanner  # Баннер победы
+@onready var victory_banner: Panel = $VictoryBanner
 
 # Цвета с высоким контрастом
 const COLOR_FILLED = Color(0.0, 0.0, 0.0)      # Черный для закрашенных ЛКМ
@@ -41,64 +41,62 @@ func set_level_data(data: LevelData):
 		player_grid.append(row)
 	
 	_create_grid_ui()
-	_create_hints()
 
 func _create_grid_ui():
-	# Очищаем предыдущую сетку
-	for child in grid_container.get_children():
+	# Очищаем предыдущие элементы
+	for child in main_grid_container.get_children():
+		child.queue_free()
+	for child in row_hints_container.get_children():
+		child.queue_free()
+	for child in col_hints_container.get_children():
 		child.queue_free()
 	
-	grid_container.custom_minimum_size = Vector2(
-		level_data.grid_size * cell_size + 40,
-		level_data.grid_size * cell_size + 40
-	)
+	# Создаем подсказки для столбцов (сверху)
+	var col_hints = _calculate_col_hints()
+	for x in range(level_data.grid_size):
+		var hint_label = Label.new()
+		hint_label.text = "\n".join(col_hints[x])
+		hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		hint_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+		hint_label.custom_minimum_size = Vector2(cell_size, 60)
+		col_hints_container.add_child(hint_label)
 	
-	# Создаем клетки
+	# Пустой угол над подсказками строк
+	var corner = Control.new()
+	corner.custom_minimum_size = Vector2(60, 60)
+	main_grid_container.add_child(corner)
+	
+	# Добавляем контейнер для подсказок столбцов
+	main_grid_container.add_child(col_hints_container)
+	
+	# Создаем подсказки для строк (слева) и клетки сетки
+	var row_hints = _calculate_row_hints()
 	for y in range(level_data.grid_size):
+		# Подсказка для строки
+		var hint_label = Label.new()
+		hint_label.text = " ".join(row_hints[y])
+		hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		hint_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		hint_label.custom_minimum_size = Vector2(60, cell_size)
+		row_hints_container.add_child(hint_label)
+		
+		# Контейнер для клеток строки
+		var row_container = HBoxContainer.new()
 		for x in range(level_data.grid_size):
 			var button = Button.new()
-			button.set_anchors_preset(Control.PRESET_TOP_LEFT)
-			button.position = Vector2(start_offset.x + x * cell_size + 5, start_offset.y + y * cell_size + 5)
-			button.size = Vector2(cell_size - 10, cell_size - 10)
+			button.custom_minimum_size = Vector2(cell_size, cell_size)
 			button.name = "Cell_%d_%d" % [x, y]
 			button.set_meta("cell_x", x)
 			button.set_meta("cell_y", y)
 			button.connect("pressed", _on_cell_left_clicked.bind(x, y))
-			button.connect("gui_input", _on_cell_gui_input)
-			grid_container.add_child(button)
+			button.connect("gui_input", _on_cell_gui_input.bind(x, y))
+			row_container.add_child(button)
+		
+		# Добавляем подсказку строки и клетки в основную сетку
+		main_grid_container.add_child(row_hints_container.get_child(y))
+		main_grid_container.add_child(row_container)
 	
 	_update_grid_visuals()
-
-func _create_hints():
-	# Создаем подсказки для строк (слева) и столбцов (сверху)
-	var row_hints = _calculate_row_hints()
-	var col_hints = _calculate_col_hints()
-	
-	# Подсказки для столбцов (сверху)
-	for x in range(level_data.grid_size):
-		var label = Label.new()
-		label.set_anchors_preset(Control.PRESET_TOP_LEFT)
-		label.position = Vector2(start_offset.x + x * cell_size + 10, 10)
-		label.size = Vector2(cell_size - 20, 60)
-		label.name = "ColHint_%d" % x
-		label.text = "\n".join(col_hints[x])
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-		label.add_theme_font_size_override("font_size", hint_font_size)
-		grid_container.add_child(label)
-	
-	# Подсказки для строк (слева)
-	for y in range(level_data.grid_size):
-		var label = Label.new()
-		label.set_anchors_preset(Control.PRESET_TOP_LEFT)
-		label.position = Vector2(10, start_offset.y + y * cell_size + 10)
-		label.size = Vector2(60, cell_size - 20)
-		label.name = "RowHint_%d" % y
-		label.text = " ".join(row_hints[y])
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		label.add_theme_font_size_override("font_size", hint_font_size)
-		grid_container.add_child(label)
 
 func _calculate_row_hints() -> Array:
 	var hints = []
@@ -149,41 +147,43 @@ func _on_cell_left_clicked(x: int, y: int):
 	
 	_update_grid_visuals()
 
-func _on_cell_gui_input(event: InputEvent):
+func _on_cell_gui_input(event: InputEvent, x: int, y: int):
 	# Правый клик: постановка синего крестика
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 		get_viewport().set_input_as_handled()
-		# Находим кнопку по позиции мыши
-		var mouse_pos = get_global_mouse_position()
-		for y in range(level_data.grid_size):
-			for x in range(level_data.grid_size):
-				var button = grid_container.get_node_or_null("Cell_%d_%d" % [x, y])
-				if button:
-					var rect = Rect2(button.position, button.size)
-					if rect.has_point(mouse_pos):
-						if player_grid[y][x] == 0:
-							player_grid[y][x] = 2
-						elif player_grid[y][x] == 2:
-							player_grid[y][x] = 0
-						_update_grid_visuals()
-						return
+		if player_grid[y][x] == 0:
+			player_grid[y][x] = 2
+		elif player_grid[y][x] == 2:
+			player_grid[y][x] = 0
+		_update_grid_visuals()
 
 func _update_grid_visuals():
 	for y in range(level_data.grid_size):
 		for x in range(level_data.grid_size):
-			var button = grid_container.get_node("Cell_%d_%d" % [x, y])
-			if player_grid[y][x] == 1:
-				# Закрашенная клетка - черный цвет (ЛКМ)
-				button.self_modulate = COLOR_FILLED
-				button.text = ""
-			elif player_grid[y][x] == 2:
-				# Крестик - синий цвет (ПКМ)
-				button.self_modulate = COLOR_CROSS
-				button.text = "✕"
-			else:
-				# Пустая клетка - белый цвет
-				button.self_modulate = COLOR_EMPTY
-				button.text = ""
+			var button = get_button(x, y)
+			if button:
+				if player_grid[y][x] == 1:
+					# Закрашенная клетка - черный цвет (ЛКМ)
+					button.self_modulate = COLOR_FILLED
+					button.text = ""
+				elif player_grid[y][x] == 2:
+					# Крестик - синий цвет (ПКМ)
+					button.self_modulate = COLOR_CROSS
+					button.text = "✕"
+				else:
+					# Пустая клетка - белый цвет
+					button.self_modulate = COLOR_EMPTY
+					button.text = ""
+
+func get_button(x: int, y: int) -> Button:
+	# Находим кнопку по координатам x, y
+	for child in main_grid_container.get_children():
+		if child is HBoxContainer:
+			for button in child.get_children():
+				if button is Button and button.has_meta("cell_x"):
+					if button.get_meta("cell_x") == x and button.get_meta("cell_y") == y:
+						return button
+	return null
 
 func _on_check_pressed():
 	_check_solution()
