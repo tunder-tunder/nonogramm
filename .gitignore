@@ -1,7 +1,1 @@
-```
-# Godot-specific ignores
-*.import
-*.remap
-.project
-.godot/
-```
+Nothing should be ignored based on the provided file changes. The only modified file is 'scripts/level_view.gd', which appears to be a source code file and should not be added to .gitignore.
