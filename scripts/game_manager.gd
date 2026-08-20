@@ -3,15 +3,12 @@ extends Node
 signal scene_changed(new_scene: Node)
 
 var current_scene: Node = null
-var current_level_index := -1
-var unlocked_gallery_levels: Array[int] = []
 var levels: Array[LevelData] = [
 	preload("res://levels/level_1.tres"),
 	preload("res://levels/level_2.tres")
 ]
 
 func _ready():
-	_set_standard_window_size()
 	load_main_menu()
 
 func load_main_menu():
@@ -20,13 +17,13 @@ func load_main_menu():
 	add_child(main_menu_scene)
 	current_scene = main_menu_scene
 	if main_menu_scene.has_signal("start_game_pressed"):
-		main_menu_scene.connect("start_game_pressed", Callable(self, "load_level_select"))
+		main_menu_scene.connect("start_game_pressed", load_level_select)
 	if main_menu_scene.has_signal("settings_pressed"):
-		main_menu_scene.connect("settings_pressed", Callable(self, "load_settings_menu"))
+		main_menu_scene.connect("settings_pressed", load_settings_menu)
 	if main_menu_scene.has_signal("gallery_pressed"):
-		main_menu_scene.connect("gallery_pressed", Callable(self, "load_gallery_menu"))
+		main_menu_scene.connect("gallery_pressed", load_gallery_menu)
 	if main_menu_scene.has_signal("exit_pressed"):
-		main_menu_scene.connect("exit_pressed", Callable(self, "quit_game"))
+		main_menu_scene.connect("exit_pressed", quit_game)
 
 func load_settings_menu():
 	_clear_current_scene()
@@ -34,7 +31,7 @@ func load_settings_menu():
 	add_child(settings_scene)
 	current_scene = settings_scene
 	if settings_scene.has_signal("back_to_menu_pressed"):
-		settings_scene.connect("back_to_menu_pressed", Callable(self, "load_main_menu"))
+		settings_scene.connect("back_to_menu_pressed", load_main_menu)
 
 func load_gallery_menu():
 	_clear_current_scene()
@@ -42,9 +39,9 @@ func load_gallery_menu():
 	add_child(gallery_scene)
 	current_scene = gallery_scene
 	if gallery_scene.has_method("set_unlocked_levels"):
-		gallery_scene.set_unlocked_levels(self.unlocked_gallery_levels)
+		gallery_scene.set_unlocked_levels(unlocked_gallery_levels)
 	if gallery_scene.has_signal("back_to_menu_pressed"):
-		gallery_scene.connect("back_to_menu_pressed", Callable(self, "load_main_menu"))
+		gallery_scene.connect("back_to_menu_pressed", load_main_menu)
 
 func load_level_select():
 	_clear_current_scene()
@@ -52,12 +49,11 @@ func load_level_select():
 	add_child(level_select_scene)
 	current_scene = level_select_scene
 	if level_select_scene.has_signal("level_selected"):
-		level_select_scene.connect("level_selected", Callable(self, "load_level"))
+		level_select_scene.connect("level_selected", load_level)
 	if level_select_scene.has_signal("back_to_menu_pressed"):
 		level_select_scene.connect("back_to_menu_pressed", Callable(self, "load_main_menu"))
 
 func load_level(level_data: Resource):
-	current_level_index = levels.find(level_data)
 	_clear_current_scene()
 	var level_scene = preload("res://scenes/level.tscn").instantiate()
 	add_child(level_scene)
@@ -65,21 +61,16 @@ func load_level(level_data: Resource):
 	if level_scene.has_method("set_level_data"):
 		level_scene.set_level_data(level_data)
 	if level_scene.has_signal("level_completed"):
-		level_scene.connect("level_completed", Callable(self, "_on_level_completed"))
+		level_scene.connect("level_completed", _on_level_completed)
 	if level_scene.has_signal("back_to_menu_pressed"):
-		level_scene.connect("back_to_menu_pressed", Callable(self, "load_main_menu"))
+		level_scene.connect("back_to_menu_pressed", load_main_menu)
 	if level_scene.has_signal("level_select_pressed"):
-		level_scene.connect("level_select_pressed", Callable(self, "load_level_select"))
+		level_scene.connect("level_select_pressed", load_level_select)
 	if level_scene.has_signal("next_level_pressed"):
-		level_scene.connect("next_level_pressed", Callable(self, "_on_next_level_pressed"))
-
-func quit_game():
-	get_tree().quit()
+		level_scene.connect("next_level_pressed", _on_next_level_pressed)
 
 func _on_level_completed():
-	if current_level_index >= 0 and not self.unlocked_gallery_levels.has(current_level_index):
-		self.unlocked_gallery_levels.append(current_level_index)
-	print("[Nonogram Debug] Level completion signal received; unlocked gallery=%s" % [self.unlocked_gallery_levels])
+	print("[Nonogram Debug] Level completion signal received")
 
 func _on_next_level_pressed(completed_level: LevelData):
 	var current_index = levels.find(completed_level)
@@ -90,8 +81,3 @@ func _clear_current_scene():
 	if current_scene:
 		current_scene.queue_free()
 		current_scene = null
-
-func _set_standard_window_size():
-	var standard_size := Vector2i(1280, 720)
-	DisplayServer.window_set_size(standard_size)
-	DisplayServer.window_set_position((DisplayServer.screen_get_size() - standard_size) / 2)
