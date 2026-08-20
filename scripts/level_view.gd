@@ -78,18 +78,19 @@ func _ready():
 		victory_banner.gui_input.connect(_on_banner_click)
 
 func set_level_data(data: LevelData):
-    level_data = data
-    level_label.text = data.level_name
-    
-    player_grid = []
-    for y in range(data.grid_size):
-        var row = []
-        for x in range(data.grid_size):
-            row.append(0)
-        player_grid.append(row)
-    
-    _create_grid_ui()
-    # Не вызываем _update_grid_visuals здесь, так как стили уже применяются при создании кнопок
+	level_data = data
+	level_label.text = data.level_name
+	
+	player_grid = []
+	for y in range(data.grid_size):
+		var row = []
+		for x in range(data.grid_size):
+			row.append(0)
+		player_grid.append(row)
+	
+	_create_grid_ui()
+	# Инициализируем визуальное состояние ячеек после создания сетки
+	_update_grid_visuals()
 
 func _create_grid_ui():
     for child in main_grid_container.get_children():
