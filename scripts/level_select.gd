@@ -53,7 +53,7 @@ func _show_chapter(chapter: int) -> void:
 	selected_chapter = chapter
 	var info: Dictionary = LevelCatalog.CHAPTERS[chapter]
 	chapter_title.text = "ГЛАВА %d · %s" % [chapter + 1, info.title]
-	chapter_subtitle.text = "%s  •  Компаньоны %s %s" % [info.subtitle, info.companion, info.companion_alt]
+	chapter_subtitle.text = "%s  •  %s" % [info.subtitle, info.companion_names]
 	chapter_icon.text = info.icon
 	chapter_header.add_theme_stylebox_override("panel", _make_style(info.color.darkened(0.35), info.color.lightened(0.12), 2, 18))
 	_style_chapter_tabs()

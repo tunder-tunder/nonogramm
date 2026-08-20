@@ -42,7 +42,8 @@ func mark_completed(data: LevelData) -> void:
 	save_to_disk()
 
 func save_draft(data: LevelData, grid: Array) -> void:
-	drafts[data.get_id()] = grid
+	# Keep an independent snapshot so later cell edits cannot mutate the preview in memory.
+	drafts[data.get_id()] = grid.duplicate(true)
 	last_chapter = data.chapter_index
 	last_level = data.level_index
 	save_to_disk()

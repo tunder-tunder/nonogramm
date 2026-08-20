@@ -169,17 +169,55 @@ text = "Компаньоны главы"
 horizontal_alignment = 1
 mouse_filter = 2
 
-[node name="CompanionOne" type="Label" parent="CompanionLane"]
+[node name="CompanionOne" type="Control" parent="CompanionLane"]
 offset_right = 54.0
 offset_bottom = 46.0
-text = "🐰"
-theme_override_font_sizes/font_size = 32
 mouse_filter = 2
 
-[node name="CompanionTwo" type="Label" parent="CompanionLane"]
+[node name="Texture" type="TextureRect" parent="CompanionLane/CompanionOne"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+
+[node name="Placeholder" type="Label" parent="CompanionLane/CompanionOne"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+text = "PNG"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.55, 0.62, 0.75, 1)
+theme_override_font_sizes/font_size = 11
+mouse_filter = 2
+
+[node name="CompanionTwo" type="Control" parent="CompanionLane"]
 offset_left = 420.0
 offset_right = 474.0
 offset_bottom = 46.0
-text = "🦊"
-theme_override_font_sizes/font_size = 32
+mouse_filter = 2
+
+[node name="Texture" type="TextureRect" parent="CompanionLane/CompanionTwo"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+
+[node name="Placeholder" type="Label" parent="CompanionLane/CompanionTwo"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+text = "PNG"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.55, 0.62, 0.75, 1)
+theme_override_font_sizes/font_size = 11
 mouse_filter = 2

@@ -15,6 +15,7 @@ func _ready():
 func load_main_menu():
 	_clear_current_scene()
 	var main_menu_scene = preload("res://scenes/main_menu.tscn").instantiate()
+	main_menu_scene.configure(progress)
 	add_child(main_menu_scene)
 	current_scene = main_menu_scene
 	if main_menu_scene.has_signal("start_game_pressed"):

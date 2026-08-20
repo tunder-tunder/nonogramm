@@ -22,8 +22,10 @@ var _debug_enabled := OS.is_debug_build()
 @onready var victory_level_select_button: Button = $VictoryBanner/VictoryActions/LevelSelectButton
 @onready var victory_next_button: Button = $VictoryBanner/VictoryActions/NextLevelButton
 @onready var debug_label: Label = $DebugLabel
-@onready var companion_one: Label = $CompanionLane/CompanionOne
-@onready var companion_two: Label = $CompanionLane/CompanionTwo
+@onready var companion_one: Control = $CompanionLane/CompanionOne
+@onready var companion_two: Control = $CompanionLane/CompanionTwo
+@onready var companion_one_texture: TextureRect = $CompanionLane/CompanionOne/Texture
+@onready var companion_two_texture: TextureRect = $CompanionLane/CompanionTwo/Texture
 var companion_time := 0.0
 
 const COLOR_FILLED = Color(0.12, 0.38, 0.85)       # Синий для ЛКМ
@@ -67,11 +69,21 @@ func set_level_data(data: LevelData):
 	if draft.size() == data.grid_size:
 		player_grid = draft
 	var chapter: Dictionary = LevelCatalog.CHAPTERS[data.chapter_index]
-	companion_one.text = chapter.companion
-	companion_two.text = chapter.companion_alt
+	_load_companion(companion_one_texture, $CompanionLane/CompanionOne/Placeholder, chapter.companion_paths[0])
+	_load_companion(companion_two_texture, $CompanionLane/CompanionTwo/Placeholder, chapter.companion_paths[1])
 	$CompanionLane/ChapterName.text = "%s · компаньоны главы" % chapter.title
 	_create_grid_ui()
 	_log_debug("Loaded %s (%dx%d)" % [data.level_name, data.grid_size, data.grid_size])
+
+func _load_companion(target: TextureRect, placeholder: Label, path: String) -> void:
+	if ResourceLoader.exists(path, "Texture2D"):
+		target.texture = load(path)
+		target.visible = true
+		placeholder.visible = false
+	else:
+		target.texture = null
+		target.visible = false
+		placeholder.visible = true
 
 func _create_grid_ui():
 	for child in main_grid_container.get_children():
@@ -227,6 +239,8 @@ func _check_solution():
 		level_label.text = "Неверно, попробуйте еще раз!"
 
 func _on_back_pressed():
+	if progress and level_data and not progress.is_completed(level_data.chapter_index, level_data.level_index):
+		progress.save_draft(level_data, player_grid)
 	back_to_menu_pressed.emit()
 
 func _on_level_select_pressed():
