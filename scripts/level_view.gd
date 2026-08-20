@@ -224,7 +224,7 @@ func _calculate_col_hints() -> Array:
 func _on_cell_gui_input(event: InputEvent, x: int, y: int):
 	if event is InputEventMouseButton and event.pressed:
 		get_viewport().set_input_as_handled()
-		var row_action := event.button_index == MOUSE_BUTTON_LEFT and event.shift_pressed
+		var row_action: bool = event.button_index == MOUSE_BUTTON_LEFT and bool(event.shift_pressed)
 		if row_action:
 			_toggle_full_row(y)
 		elif event.button_index == MOUSE_BUTTON_LEFT:
