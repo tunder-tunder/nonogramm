@@ -95,6 +95,7 @@ offset_bottom = 100.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_empty")
+mouse_filter = 2
 
 [node name="VictoryVBox" type="VBoxContainer" parent="VictoryBanner" unique_id=1890087719]
 layout_mode = 1
@@ -105,6 +106,8 @@ grow_horizontal = 2
 grow_vertical = 2
 alignment = 1
 theme_override_constants/separation = 10
+size_flags_horizontal = 3
+size_flags_vertical = 3
 
 [node name="VictoryMessage" type="Label" parent="VictoryBanner/VictoryVBox" unique_id=1890087718]
 layout_mode = 2
@@ -115,6 +118,7 @@ text = "🎉 Поздравляем! 🎉
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
+size_flags_horizontal = 3
 
 [node name="VictoryButtonsContainer" type="HBoxContainer" parent="VictoryBanner/VictoryVBox" unique_id=1876813770]
 layout_mode = 2
@@ -122,6 +126,7 @@ custom_minimum_size = Vector2(360, 50)
 grow_horizontal = 2
 alignment = 1
 theme_override_constants/separation = 10
+size_flags_horizontal = 3
 
 [node name="MenuButton" type="Button" parent="VictoryBanner/VictoryVBox/VictoryButtonsContainer" unique_id=476745728]
 custom_minimum_size = Vector2(140, 40)

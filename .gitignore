@@ -1,55 +1,52 @@
 ```
 # Godot-specific ignores
 *.import
-*.uid
 export_presets.cfg
-.rsync-filter
-.editor
-.godot/
+.autosave/
+.user/
+.scenetree
+.editor/
 
-# Compiled and build artifacts
-*.pyc
-__pycache__/
-*.o
-*.obj
-*.so
-*.dll
+# Build artifacts
 *.exe
-*.class
-*.out
+*.dll
+*.so
+*.dylib
 
-# Dependencies
-node_modules/
-venv/
-.venv/
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Environment files
 .env
 .env.local
-.env.*
+*.env.*
 
-# Logs and temp files
-*.log
-*.tmp
+# Editor/IDE files
+.vscode/
+.idea/
 *.swp
 *.swo
 
-# Editors
-.vscode/
-.idea/
+# Dependencies and caches
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
 
-# System files
+# OS generated files
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
-
-# Coverage and testing
-.coverage
-coverage/
-htmlcov/
-
-# Build directories (common for various languages)
-build/
-dist/
-target/
-.gradle/
-.mypy_cache/
-.pytest_cache/
 ```

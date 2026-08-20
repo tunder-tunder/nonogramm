@@ -61,6 +61,8 @@ func set_level_data(data: LevelData):
         player_grid.append(row)
     
     _create_grid_ui()
+    # Инициализируем визуальное состояние ячеек после создания сетки
+    _update_grid_visuals()
 
 func _create_grid_ui():
     for child in main_grid_container.get_children():
@@ -98,13 +100,7 @@ func _create_grid_ui():
             button.set_meta("cell_x", x)
             button.set_meta("cell_y", y)
             
-            var empty_style = theme_resource.get_stylebox("empty", "Button")
-            if empty_style:
-                button.add_theme_stylebox_override("normal", empty_style)
-                button.add_theme_stylebox_override("hover", empty_style)
-                button.add_theme_stylebox_override("pressed", empty_style)
-                button.add_theme_stylebox_override("disabled", empty_style)
-            
+            # Не устанавливаем стили при создании - они будут установлены в _update_grid_visuals
             button.focus_mode = Control.FOCUS_NONE
             button.text = ""
             
@@ -172,6 +168,7 @@ func _on_cell_gui_input(event: InputEvent, x: int, y: int):
             elif current_state == 1:
                 player_grid[y][x] = 2
         
+        # Принудительно обновляем стили кнопки сразу после изменения состояния
         _update_grid_visuals()
 
 func _update_grid_visuals():
@@ -179,22 +176,27 @@ func _update_grid_visuals():
         for x in range(level_data.grid_size):
             var button = get_button(x, y)
             if button:
+                # Полностью очищаем все переопределения стилей и цветов
+                button.remove_theme_stylebox_override("normal")
+                button.remove_theme_stylebox_override("hover")
+                button.remove_theme_stylebox_override("pressed")
+                button.remove_theme_stylebox_override("disabled")
+                button.remove_theme_stylebox_override("focused")
+                button.remove_theme_color_override("font_color")
+                button.remove_theme_font_size_override("font_size")
+                
                 var style: StyleBox
                 if player_grid[y][x] == 0:
                     style = theme_resource.get_stylebox("empty", "Button")
                     button.text = ""
-                    button.remove_theme_color_override("font_color")
-                    button.remove_theme_font_size_override("font_size")
                 elif player_grid[y][x] == 1:
                     style = theme_resource.get_stylebox("filled", "Button")
                     button.text = ""
-                    button.remove_theme_color_override("font_color")
-                    button.remove_theme_font_size_override("font_size")
                 elif player_grid[y][x] == 2:
                     style = theme_resource.get_stylebox("cross", "Button")
                     # Не устанавливаем текст для крестика, чтобы не растягивать ячейку
                     button.text = ""
-                    # Устанавлием синий цвет текста на случай если он нужен
+                    # Устанавливаем синий цвет текста на случай если он нужен
                     button.add_theme_color_override("font_color", Color(0, 0.5, 1, 1))
                     # Маленький размер шрифта чтобы не растягивал ячейку
                     button.add_theme_font_size_override("font_size", 1)
@@ -204,6 +206,7 @@ func _update_grid_visuals():
                     button.add_theme_stylebox_override("hover", style)
                     button.add_theme_stylebox_override("pressed", style)
                     button.add_theme_stylebox_override("disabled", style)
+                    button.add_theme_stylebox_override("focused", style)
 
 func get_button(x: int, y: int) -> Button:
     if not grid_container:
