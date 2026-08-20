@@ -26,6 +26,9 @@ func _ready():
     # Загружаем тему
     theme_resource = load("res://NonogramTheme.tres")
     
+    # Применяем тему ко всем кнопкам сцены
+    _apply_theme_to_buttons()
+    
     back_button.connect("pressed", _on_back_pressed)
     check_button.connect("pressed", _on_check_pressed)
     
@@ -230,6 +233,9 @@ func _check_solution():
         check_button.disabled = true
         back_button.disabled = false
         show_victory_banner()
+        # Блокируем взаимодействие с сеткой после победы
+        _set_grid_interaction(false)
+    else:
         level_label.text = "Неверно, попробуйте еще раз!"
 
 func show_victory_banner():
@@ -249,6 +255,8 @@ func _on_banner_click(event: InputEvent):
             victory_buttons_container.visible = true
             if victory_message:
                 victory_message.text = "Поздравляем!\nВы решили головоломку!"
+            # Применяем тему к появившимся кнопкам
+            _apply_theme_to_buttons()
 
 func _on_menu_pressed():
     back_to_menu_pressed.emit()
@@ -258,3 +266,27 @@ func _on_next_level_pressed():
 
 func _on_back_pressed():
     back_to_menu_pressed.emit()
+
+func _set_grid_interaction(enabled: bool):
+    """Включает или отключает взаимодействие с ячейками сетки"""
+    if not grid_container:
+        return
+    
+    for child in grid_container.get_children():
+        if child is Button and child.has_meta("cell_x"):
+            child.disabled = not enabled
+
+func _apply_theme_to_buttons():
+    """Применяет тему ко всем кнопкам интерфейса (не ячеек)"""
+    if not theme_resource:
+        return
+    
+    # Применяем к кнопкам управления
+    var ui_buttons = [check_button, back_button, menu_button, next_level_button]
+    for btn in ui_buttons:
+        if btn and theme_resource.has_stylebox("empty", "Button"):
+            var style = theme_resource.get_stylebox("empty", "Button")
+            if style:
+                btn.add_theme_stylebox_override("normal", style)
+                btn.add_theme_stylebox_override("hover", style)
+                btn.add_theme_stylebox_override("pressed", style)
