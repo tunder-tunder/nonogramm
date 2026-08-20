@@ -24,30 +24,33 @@ var theme_resource: Theme
 @onready var next_level_button: Button = $VictoryBanner/VictoryVBox/VictoryButtonsContainer/NextLevelButton
 
 func _ready():
-    # Загружаем тему
-    theme_resource = load("res://NonogramTheme.tres")
-    
-    # Применяем тему ко всем кнопкам сцены
-    _apply_theme_to_buttons()
-    
-    back_button.connect("pressed", _on_back_pressed)
-    check_button.connect("pressed", _on_check_pressed)
-    
-    # Подключаем кнопки баннера победы
-    if menu_button:
-        menu_button.connect("pressed", _on_menu_pressed)
-    if next_level_button:
-        next_level_button.connect("pressed", _on_next_level_pressed)
-    
-    # Скрываем баннер победы при старте
-    if victory_banner:
-        victory_banner.visible = false
-        victory_message.autowrap_mode = TextServer.AUTOWRAP_WORD
-        
-        if victory_buttons_container:
-            victory_buttons_container.visible = false
-        
-        victory_banner.gui_input.connect(_on_banner_click)
+	# Загружаем тему
+	theme_resource = load("res://NonogramTheme.tres")
+	
+	# Применяем тему ко всем кнопкам сцены
+	_apply_theme_to_buttons()
+	
+	back_button.connect("pressed", _on_back_pressed)
+	check_button.connect("pressed", _on_check_pressed)
+	
+	# Подключаем кнопки баннера победы
+	if menu_button:
+		menu_button.connect("pressed", _on_menu_pressed)
+	if next_level_button:
+		next_level_button.connect("pressed", _on_next_level_pressed)
+	
+	# Скрываем баннер победы при старте
+	if victory_banner:
+		victory_banner.visible = false
+		victory_banner.custom_minimum_size = Vector2(400, 150)
+		victory_message.autowrap_mode = TextServer.AUTOWRAP_WORD
+		victory_message.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		victory_message.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		
+		if victory_buttons_container:
+			victory_buttons_container.visible = false
+		
+		victory_banner.gui_input.connect(_on_banner_click)
 
 func set_level_data(data: LevelData):
     level_data = data
@@ -110,42 +113,42 @@ func _create_grid_ui():
     main_grid_container.add_child(grid_container)
 
 func _calculate_row_hints() -> Array:
-    var hints = []
-    for y in range(level_data.grid_size):
-        var row_hint = []
-        var count = 0
-        for x in range(level_data.grid_size):
-            if level_data.solution[y][x] == 1:
-                count += 1
-            else:
-                if count > 0:
-                    row_hint.append(str(count))
-                    count = 0
-        if count > 0:
-            row_hint.append(str(count))
-        if row_hint.is_empty():
-            row_hint.append("0")
-        hints.append(row_hint)
-    return hints
+	var hints = []
+	for y in range(level_data.grid_size):
+		var row_hint = []
+		var count = 0
+		for x in range(level_data.grid_size):
+			if level_data.solution[y][x] == 1:
+				count += 1
+			else:
+				if count > 0:
+					row_hint.append(str(count))
+					count = 0
+		if count > 0:
+			row_hint.append(str(count))
+		if row_hint.is_empty():
+			row_hint.append("0")
+		hints.append(row_hint)
+	return hints
 
 func _calculate_col_hints() -> Array:
-    var hints = []
-    for x in range(level_data.grid_size):
-        var col_hint = []
-        var count = 0
-        for y in range(level_data.grid_size):
-            if level_data.solution[y][x] == 1:
-                count += 1
-            else:
-                if count > 0:
-                    col_hint.append(str(count))
-                    count = 0
-        if count > 0:
-            col_hint.append(str(count))
-        if col_hint.is_empty():
-            col_hint.append("0")
-        hints.append(col_hint)
-    return hints
+	var hints = []
+	for x in range(level_data.grid_size):
+		var col_hint = []
+		var count = 0
+		for y in range(level_data.grid_size):
+			if level_data.solution[y][x] == 1:
+				count += 1
+			else:
+				if count > 0:
+					col_hint.append(str(count))
+					count = 0
+		if count > 0:
+			col_hint.append(str(count))
+		if col_hint.is_empty():
+			col_hint.append("0")
+		hints.append(col_hint)
+	return hints
 
 func _on_cell_gui_input(event: InputEvent, x: int, y: int):
     if event is InputEventMouseButton and event.pressed:
@@ -209,90 +212,86 @@ func _update_grid_visuals():
                     button.add_theme_stylebox_override("focused", style)
 
 func get_button(x: int, y: int) -> Button:
-    if not grid_container:
-        return null
-    
-    for child in grid_container.get_children():
-        if child is Button and child.has_meta("cell_x"):
-            if child.get_meta("cell_x") == x and child.get_meta("cell_y") == y:
-                return child
-    return null
+	if not grid_container:
+		return null
+	
+	for child in grid_container.get_children():
+		if child is Button and child.has_meta("cell_x"):
+			if child.get_meta("cell_x") == x and child.get_meta("cell_y") == y:
+				return child
+	return null
 
 func _on_check_pressed():
-    _check_solution()
+	_check_solution()
 
 func _check_solution():
-    var is_correct = true
-    for y in range(level_data.grid_size):
-        for x in range(level_data.grid_size):
-            if player_grid[y][x] != level_data.solution[y][x]:
-                is_correct = false
-                break
-        if not is_correct:
-            break
-    
-    if is_correct:
-        level_label.text = "Победа! Уровень пройден!"
-        level_completed.emit()
-        check_button.disabled = true
-        back_button.disabled = false
-        show_victory_banner()
-        # Блокируем взаимодействие с сеткой после победы
-        _set_grid_interaction(false)
-    else:
-        level_label.text = "Неверно, попробуйте еще раз!"
+	var is_correct = true
+	for y in range(level_data.grid_size):
+		for x in range(level_data.grid_size):
+			if player_grid[y][x] != level_data.solution[y][x]:
+				is_correct = false
+				break
+		if not is_correct:
+			break
+	
+	if is_correct:
+		level_label.text = "Победа! Уровень пройден!"
+		level_completed.emit()
+		check_button.disabled = true
+		back_button.disabled = false
+		show_victory_banner()
+		# Блокируем взаимодействие с сеткой после победы
+		_set_grid_interaction(false)
+	else:
+		level_label.text = "Неверно, попробуйте еще раз!"
 
 func show_victory_banner():
-    if victory_banner:
-        victory_banner.visible = true
-        victory_banner.z_index = 100
-        
-        if victory_buttons_container:
-            victory_buttons_container.visible = false
-        
-        if victory_message:
-            victory_message.text = "Победа!\n(Кликните, чтобы продолжить)"
-        # Применяем тему к баннеру
-        _apply_theme_to_buttons()
+	if victory_banner:
+		victory_banner.visible = true
+		victory_banner.z_index = 100
+		
+		if victory_buttons_container:
+			victory_buttons_container.visible = false
+		
+		if victory_message:
+			victory_message.text = "Победа!\n(Кликните, чтобы продолжить)"
 
 func _on_banner_click(event: InputEvent):
-    if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-        if victory_buttons_container and not victory_buttons_container.visible:
-            victory_buttons_container.visible = true
-            if victory_message:
-                victory_message.text = "Поздравляем!\nВы решили головоломку!"
-            # Применяем тему к появившимся кнопкам
-            _apply_theme_to_buttons()
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if victory_buttons_container and not victory_buttons_container.visible:
+			victory_buttons_container.visible = true
+			if victory_message:
+				victory_message.text = "Поздравляем!\nВы решили головоломку!"
+			# Применяем тему к появившимся кнопкам
+			_apply_theme_to_buttons()
 
 func _on_menu_pressed():
-    back_to_menu_pressed.emit()
+	back_to_menu_pressed.emit()
 
 func _on_next_level_pressed():
-    next_level_requested.emit()
+	next_level_requested.emit()
 
 func _on_back_pressed():
-    back_to_menu_pressed.emit()
+	back_to_menu_pressed.emit()
 
 func _set_grid_interaction(enabled: bool):
-    """Включает или отключает взаимодействие с ячейками сетки"""
-    if not grid_container:
-        return
-    
-    for child in grid_container.get_children():
-        if child is Button and child.has_meta("cell_x"):
-            child.disabled = not enabled
+	if not grid_container:
+		return
+	
+	for child in grid_container.get_children():
+		if child is Button and child.has_meta("cell_x"):
+			child.disabled = not enabled
 
 func _apply_theme_to_buttons():
-    """Применяет тему ко всем кнопкам интерфейса (не ячеек)"""
-    if not theme_resource:
-        return
-    
-    # Применяем к кнопкам управления
-    var ui_buttons = [check_button, back_button, menu_button, next_level_button]
-    for btn in ui_buttons:
-        if btn and theme_resource.has_stylebox("empty", "Button"):
-            var style = theme_resource.get_stylebox("empty", "Button")
-            if style:
-                btn.add_theme_stylebox_override("normal", style)
-                btn.add_theme_stylebox_override("hover", style)
-                btn.add_theme_stylebox_override("pressed", style)
+	if not theme_resource:
+		return
+	
+	# Применяем к кнопкам управления
+	var ui_buttons = [check_button, back_button, menu_button, next_level_button]
+	for btn in ui_buttons:
+		if btn and theme_resource.has_stylebox("empty", "Button"):
+			var style = theme_resource.get_stylebox("empty", "Button")
+			if style:
+				btn.add_theme_stylebox_override("normal", style)
+				btn.add_theme_stylebox_override("hover", style)
+				btn.add_theme_stylebox_override("pressed", style)
