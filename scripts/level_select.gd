@@ -104,13 +104,15 @@ func _create_level_card(level_index: int) -> Control:
 	preview.custom_minimum_size = Vector2(94, 94)
 	preview.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	var draft := progress.get_draft(data)
-	preview.configure(data.grid_size, draft, data.preview_color)
+	var preview_grid := data.solution if completed else draft
+	preview.configure(data.grid_size, preview_grid, data.preview_color)
 	content.add_child(preview)
 
 	var status := Label.new()
 	status.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	status.text = "✓ ПРОЙДЕН" if completed else ("ДОСТУПЕН" if unlocked else "🔒 ЗАКРЫТ")
+	var completion_time := progress.get_completion_time(data)
+	status.text = ("✓ ПРОЙДЕН · %s" % SaveData.format_time(completion_time) if completion_time > 0.0 else "✓ ПРОЙДЕН") if completed else ("ДОСТУПЕН" if unlocked else "🔒 ЗАКРЫТ")
 	status.add_theme_color_override("font_color", Color("318463") if completed else (Color("53627b") if unlocked else Color("8791a5")))
 	content.add_child(status)
 	return button

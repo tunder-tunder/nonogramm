@@ -73,8 +73,8 @@ func load_level(level_data: Resource):
 	if level_scene.has_signal("next_level_pressed"):
 		level_scene.connect("next_level_pressed", _on_next_level_pressed)
 
-func _on_level_completed():
-	progress.mark_completed(active_level)
+func _on_level_completed(elapsed_seconds: float):
+	progress.mark_completed(active_level, elapsed_seconds)
 	print("[Nonogram Debug] Level completion signal received")
 
 func _on_next_level_pressed(completed_level: LevelData):
