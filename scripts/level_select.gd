@@ -89,43 +89,22 @@ func _create_level_card(level_index: int) -> Control:
 	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT, Control.PRESET_MODE_MINSIZE, 14)
 	content.add_theme_constant_override("separation", 7)
 	button.add_child(content)
+	var data := _get_level(selected_chapter, level_index)
 
 	var number := Label.new()
 	number.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	number.text = "УРОВЕНЬ %02d" % (level_index + 1)
+	number.text = "УРОВЕНЬ %02d  ·  %d×%d" % [level_index + 1, data.grid_size, data.grid_size]
 	number.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	number.add_theme_color_override("font_color", Color("24314d") if unlocked else Color("8791a5"))
 	number.add_theme_font_size_override("font_size", 16)
 	content.add_child(number)
 
-	var preview := GridContainer.new()
+	var preview := LevelPreview.new()
 	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	preview.columns = 5
+	preview.custom_minimum_size = Vector2(94, 94)
 	preview.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	preview.add_theme_constant_override("h_separation", 2)
-	preview.add_theme_constant_override("v_separation", 2)
-	var data := _get_level(selected_chapter, level_index)
 	var draft := progress.get_draft(data)
-	for y in range(5):
-		for x in range(5):
-			var cell := PanelContainer.new()
-			cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			cell.custom_minimum_size = Vector2(17, 17)
-			var value := 0
-			if draft.size() == data.grid_size and draft[y] is Array and draft[y].size() == data.grid_size:
-				value = int(draft[y][x])
-			var fill := data.preview_color if value == 1 else Color("f5f7fb")
-			cell.add_theme_stylebox_override("panel", _make_cell_style(fill))
-			if value == 2:
-				var cross := Label.new()
-				cross.mouse_filter = Control.MOUSE_FILTER_IGNORE
-				cross.text = "×"
-				cross.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-				cross.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-				cross.add_theme_color_override("font_color", Color("69758d"))
-				cross.add_theme_font_size_override("font_size", 12)
-				cell.add_child(cross)
-			preview.add_child(cell)
+	preview.configure(data.grid_size, draft, data.preview_color)
 	content.add_child(preview)
 
 	var status := Label.new()
@@ -156,14 +135,6 @@ func _make_style(background: Color, border: Color, width: int, radius: int) -> S
 	style.content_margin_top = 10
 	style.content_margin_right = 12
 	style.content_margin_bottom = 10
-	return style
-
-func _make_cell_style(background: Color) -> StyleBoxFlat:
-	var style := StyleBoxFlat.new()
-	style.bg_color = background
-	style.border_color = Color("d2d8e4")
-	style.set_border_width_all(1)
-	style.set_corner_radius_all(3)
 	return style
 
 func _continue_game() -> void:

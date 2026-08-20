@@ -50,7 +50,12 @@ func save_draft(data: LevelData, grid: Array) -> void:
 
 func get_draft(data: LevelData) -> Array:
 	var draft = drafts.get(data.get_id(), [])
-	return draft.duplicate(true) if draft is Array else []
+	if not draft is Array or draft.size() != data.grid_size:
+		return []
+	for row in draft:
+		if not row is Array or row.size() != data.grid_size:
+			return []
+	return draft.duplicate(true)
 
 func is_completed(chapter: int, level: int) -> bool:
 	return completed.has("%d:%d" % [chapter, level])
@@ -75,3 +80,13 @@ func completed_in_chapter(chapter: int) -> int:
 		if is_completed(chapter, level):
 			count += 1
 	return count
+
+func reset_progress() -> void:
+	completed.clear()
+	drafts.clear()
+	last_chapter = 0
+	last_level = 0
+	if FileAccess.file_exists(SAVE_PATH):
+		var error := DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
+		if error != OK:
+			push_error("Could not remove progress save: %s" % error_string(error))

@@ -2,6 +2,8 @@ extends Control
 
 signal back_to_menu_pressed
 
+var progress: SaveData
+
 const RESOLUTIONS := [
 	Vector2i(1280, 720),
 	Vector2i(1600, 900),
@@ -13,11 +15,18 @@ const RESOLUTIONS := [
 @onready var apply_button: Button = $Panel/VBoxContainer/ApplyButton
 @onready var back_button: Button = $Panel/VBoxContainer/BackButton
 @onready var status_label: Label = $Panel/VBoxContainer/StatusLabel
+@onready var reset_button: Button = $Panel/VBoxContainer/ResetProgressButton
+@onready var reset_dialog: ConfirmationDialog = $ResetProgressDialog
+
+func configure(save_data: SaveData) -> void:
+	progress = save_data
 
 func _ready():
 	_populate_resolutions()
 	fullscreen_check.button_pressed = DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN
 	apply_button.connect("pressed", _on_apply_pressed)
+	reset_button.connect("pressed", reset_dialog.popup_centered)
+	reset_dialog.confirmed.connect(_on_reset_confirmed)
 	back_button.connect("pressed", _on_back_pressed)
 
 func _populate_resolutions():
@@ -44,3 +53,9 @@ func _on_apply_pressed():
 
 func _on_back_pressed():
 	back_to_menu_pressed.emit()
+
+func _on_reset_confirmed() -> void:
+	if progress:
+		progress.reset_progress()
+	status_label.text = "Прогресс сброшен. Новая игра начнётся с главы 1."
+	reset_button.disabled = true

@@ -30,6 +30,7 @@ func load_main_menu():
 func load_settings_menu():
 	_clear_current_scene()
 	var settings_scene = preload("res://scenes/settings_menu.tscn").instantiate()
+	settings_scene.configure(progress)
 	add_child(settings_scene)
 	current_scene = settings_scene
 	if settings_scene.has_signal("back_to_menu_pressed"):

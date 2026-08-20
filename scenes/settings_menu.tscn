@@ -21,9 +21,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -220.0
-offset_top = -170.0
+offset_top = -210.0
 offset_right = 220.0
-offset_bottom = 170.0
+offset_bottom = 210.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -65,7 +65,19 @@ text = "Применить"
 layout_mode = 2
 text = ""
 horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="ResetProgressButton" type="Button" parent="Panel/VBoxContainer"]
+layout_mode = 2
+text = "Сбросить прогресс"
+theme_override_colors/font_color = Color(1, 0.88, 0.88, 1)
 
 [node name="BackButton" type="Button" parent="Panel/VBoxContainer"]
 layout_mode = 2
 text = "Назад"
+
+[node name="ResetProgressDialog" type="ConfirmationDialog" parent="."]
+title = "Сброс прогресса"
+dialog_text = "Удалить все пройденные уровни и незавершённые сетки?\nЭто действие нельзя отменить."
+ok_button_text = "Сбросить"
+cancel_button_text = "Отмена"
