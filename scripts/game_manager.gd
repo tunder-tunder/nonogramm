@@ -3,15 +3,12 @@ extends Node
 signal scene_changed(new_scene: Node)
 
 var current_scene: Node = null
-var current_level_index := -1
-var unlocked_gallery_levels: Array[int] = []
 var levels: Array[LevelData] = [
 	preload("res://levels/level_1.tres"),
 	preload("res://levels/level_2.tres")
 ]
 
 func _ready():
-	_set_standard_window_size()
 	load_main_menu()
 
 func load_main_menu():
@@ -57,7 +54,6 @@ func load_level_select():
 		level_select_scene.connect("back_to_menu_pressed", load_main_menu)
 
 func load_level(level_data: Resource):
-	current_level_index = levels.find(level_data)
 	_clear_current_scene()
 	var level_scene = preload("res://scenes/level.tscn").instantiate()
 	add_child(level_scene)
@@ -73,13 +69,8 @@ func load_level(level_data: Resource):
 	if level_scene.has_signal("next_level_pressed"):
 		level_scene.connect("next_level_pressed", _on_next_level_pressed)
 
-func quit_game():
-	get_tree().quit()
-
 func _on_level_completed():
-	if current_level_index >= 0 and not unlocked_gallery_levels.has(current_level_index):
-		unlocked_gallery_levels.append(current_level_index)
-	print("[Nonogram Debug] Level completion signal received; unlocked gallery=%s" % [unlocked_gallery_levels])
+	print("[Nonogram Debug] Level completion signal received")
 
 func _on_next_level_pressed(completed_level: LevelData):
 	var current_index = levels.find(completed_level)
@@ -90,8 +81,3 @@ func _clear_current_scene():
 	if current_scene:
 		current_scene.queue_free()
 		current_scene = null
-
-func _set_standard_window_size():
-	var standard_size := Vector2i(1280, 720)
-	DisplayServer.window_set_size(standard_size)
-	DisplayServer.window_set_position((DisplayServer.screen_get_size() - standard_size) / 2)

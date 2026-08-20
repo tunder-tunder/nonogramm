@@ -30,6 +30,10 @@ window/stretch/aspect="expand"
 
 theme/custom="res://themes/game_theme.tres"
 
+[gui]
+
+theme/custom="res://themes/game_theme.tres"
+
 [input]
 
 click={
