@@ -1,0 +1,9 @@
+[gd_resource type="Resource" format=3 uid="uid://level2"]
+
+[ext_resource type="Script" path="res://scripts/level_data.gd" id="1_level_data"]
+
+[resource]
+script = ExtResource("1_level_data")
+level_name = "Уровень 2: Домик"
+grid_size = 5
+solution = [[0, 0, 1, 0, 0], [0, 1, 1, 1, 0], [1, 1, 1, 1, 1], [1, 0, 1, 0, 1], [1, 1, 1, 1, 1]]
