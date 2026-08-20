@@ -17,10 +17,11 @@ var theme_resource: Theme
 @onready var check_button: Button = $CheckButton
 @onready var back_button: Button = $BackButton
 @onready var victory_banner: Panel = $VictoryBanner
-@onready var victory_message: Label = $VictoryBanner/VictoryMessage
-@onready var victory_buttons_container: HBoxContainer = $VictoryBanner/VictoryButtonsContainer
-@onready var menu_button: Button = $VictoryBanner/VictoryButtonsContainer/MenuButton
-@onready var next_level_button: Button = $VictoryBanner/VictoryButtonsContainer/NextLevelButton
+@onready var victory_vbox: VBoxContainer = $VictoryBanner/VictoryVBox
+@onready var victory_message: Label = $VictoryBanner/VictoryVBox/VictoryMessage
+@onready var victory_buttons_container: HBoxContainer = $VictoryBanner/VictoryVBox/VictoryButtonsContainer
+@onready var menu_button: Button = $VictoryBanner/VictoryVBox/VictoryButtonsContainer/MenuButton
+@onready var next_level_button: Button = $VictoryBanner/VictoryVBox/VictoryButtonsContainer/NextLevelButton
 
 func _ready():
     # Загружаем тему
@@ -41,10 +42,7 @@ func _ready():
     # Скрываем баннер победы при старте
     if victory_banner:
         victory_banner.visible = false
-        victory_banner.custom_minimum_size = Vector2(400, 150)
         victory_message.autowrap_mode = TextServer.AUTOWRAP_WORD
-        victory_message.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-        victory_message.size_flags_vertical = Control.SIZE_EXPAND_FILL
         
         if victory_buttons_container:
             victory_buttons_container.visible = false
@@ -194,9 +192,12 @@ func _update_grid_visuals():
                     button.remove_theme_font_size_override("font_size")
                 elif player_grid[y][x] == 2:
                     style = theme_resource.get_stylebox("cross", "Button")
-                    button.text = "X"
+                    # Не устанавливаем текст для крестика, чтобы не растягивать ячейку
+                    button.text = ""
+                    # Устанавлием синий цвет текста на случай если он нужен
                     button.add_theme_color_override("font_color", Color(0, 0.5, 1, 1))
-                    button.add_theme_font_size_override("font_size", 40)
+                    # Маленький размер шрифта чтобы не растягивал ячейку
+                    button.add_theme_font_size_override("font_size", 1)
                 
                 if style:
                     button.add_theme_stylebox_override("normal", style)
@@ -248,6 +249,8 @@ func show_victory_banner():
         
         if victory_message:
             victory_message.text = "Победа!\n(Кликните, чтобы продолжить)"
+        # Применяем тему к баннеру
+        _apply_theme_to_buttons()
 
 func _on_banner_click(event: InputEvent):
     if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
