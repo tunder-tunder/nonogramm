@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://level_select"]
 
-[ext_resource type="Script" path="res://scripts/level_select.gd" id="1_level_select"]
-[ext_resource type="Theme" path="res://themes/game_theme.tres" id="2_game_theme"]
+[ext_resource type="Script" path="res://scripts/level_select.gd" id="1"]
+[ext_resource type="Theme" path="res://themes/game_theme.tres" id="2"]
 
 [node name="LevelSelect" type="Control"]
 layout_mode = 3
@@ -10,37 +10,96 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = ExtResource("2_game_theme")
-script = ExtResource("1_level_select")
+theme = ExtResource("2")
+script = ExtResource("1")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="Background" type="ColorRect" parent="."]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -100.0
-offset_top = -100.0
-offset_right = 100.0
-offset_bottom = 100.0
-grow_horizontal = 2
-grow_vertical = 2
-alignment = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.945, 0.956, 0.98, 1)
+mouse_filter = 2
 
-[node name="Title" type="Label" parent="VBoxContainer"]
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 54
+theme_override_constants/margin_top = 28
+theme_override_constants/margin_right = 54
+theme_override_constants/margin_bottom = 28
+
+[node name="Page" type="VBoxContainer" parent="Margin"]
 layout_mode = 2
-text = "ВЫБОР УРОВНЯ"
+theme_override_constants/separation = 14
+
+[node name="TopBar" type="HBoxContainer" parent="Margin/Page"]
+layout_mode = 2
+[node name="BackButton" type="Button" parent="Margin/Page/TopBar"]
+layout_mode = 2
+text = "←  Главное меню"
+[node name="Spacer" type="Control" parent="Margin/Page/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+[node name="Title" type="Label" parent="Margin/Page/TopBar"]
+layout_mode = 2
+text = "КАРТА ПУТЕШЕСТВИЯ"
+theme_override_colors/font_color = Color(0.075, 0.11, 0.2, 1)
+theme_override_font_sizes/font_size = 22
+
+[node name="ChapterTabs" type="HBoxContainer" parent="Margin/Page"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ChapterHeader" type="PanelContainer" parent="Margin/Page"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 98)
+
+[node name="HeaderMargin" type="MarginContainer" parent="Margin/Page/ChapterHeader"]
+layout_mode = 2
+theme_override_constants/margin_left = 22
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 22
+theme_override_constants/margin_bottom = 10
+
+[node name="HeaderRow" type="HBoxContainer" parent="Margin/Page/ChapterHeader/HeaderMargin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+[node name="ChapterIcon" type="Label" parent="Margin/Page/ChapterHeader/HeaderMargin/HeaderRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(72, 0)
+text = "🌿"
 horizontal_alignment = 1
-
-[node name="Level1Button" type="Button" parent="VBoxContainer"]
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 38
+[node name="Copy" type="VBoxContainer" parent="Margin/Page/ChapterHeader/HeaderMargin/HeaderRow"]
 layout_mode = 2
-text = "Уровень 1"
-
-[node name="Level2Button" type="Button" parent="VBoxContainer"]
+size_flags_horizontal = 3
+alignment = 1
+[node name="ChapterTitle" type="Label" parent="Margin/Page/ChapterHeader/HeaderMargin/HeaderRow/Copy"]
 layout_mode = 2
-text = "Уровень 2"
-
-[node name="BackButton" type="Button" parent="VBoxContainer"]
+theme_override_font_sizes/font_size = 24
+[node name="ChapterSubtitle" type="Label" parent="Margin/Page/ChapterHeader/HeaderMargin/HeaderRow/Copy"]
 layout_mode = 2
-text = "Назад в меню"
+[node name="Progress" type="Label" parent="Margin/Page/ChapterHeader/HeaderMargin/HeaderRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(140, 0)
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LevelGrid" type="GridContainer" parent="Margin/Page"]
+layout_mode = 2
+size_flags_vertical = 3
+columns = 5
+theme_override_constants/h_separation = 14
+theme_override_constants/v_separation = 12
+
+[node name="Footer" type="HBoxContainer" parent="Margin/Page"]
+layout_mode = 2
+alignment = 2
+[node name="ContinueButton" type="Button" parent="Margin/Page/Footer"]
+layout_mode = 2
+custom_minimum_size = Vector2(260, 46)
+text = "Продолжить"
