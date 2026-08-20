@@ -8,10 +8,10 @@ var progress: SaveData
 var selected_chapter := 0
 
 @onready var chapter_tabs: HBoxContainer = $Margin/Page/ChapterTabs
-@onready var chapter_title: Label = $Margin/Page/ChapterHeader/HeaderMargin/HeaderRow/Copy/ChapterTitle
-@onready var chapter_subtitle: Label = $Margin/Page/ChapterHeader/HeaderMargin/HeaderRow/Copy/ChapterSubtitle
-@onready var chapter_icon: Label = $Margin/Page/ChapterHeader/HeaderMargin/HeaderRow/ChapterIcon
-@onready var progress_label: Label = $Margin/Page/ChapterHeader/HeaderMargin/HeaderRow/Progress
+@onready var chapter_title: Label = $Margin/Page/ChapterHeader/Copy/ChapterTitle
+@onready var chapter_subtitle: Label = $Margin/Page/ChapterHeader/Copy/ChapterSubtitle
+@onready var chapter_icon: Label = $Margin/Page/ChapterHeader/ChapterIcon
+@onready var progress_label: Label = $Margin/Page/ChapterHeader/Progress
 @onready var level_grid: GridContainer = $Margin/Page/LevelGrid
 @onready var continue_button: Button = $Margin/Page/Footer/ContinueButton
 
@@ -63,7 +63,6 @@ func _create_level_card(level_index: int) -> Control:
 	var button := Button.new()
 	button.custom_minimum_size = Vector2(190, 170)
 	button.disabled = not unlocked
-	button.tooltip_text = "Продолжить уровень %d" % (level_index + 1) if unlocked else "Сначала пройдите предыдущий уровень"
 	button.pressed.connect(_select_level.bind(level_index))
 
 	var content := VBoxContainer.new()
@@ -83,16 +82,12 @@ func _create_level_card(level_index: int) -> Control:
 	preview.columns = 5
 	preview.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	var data := _get_level(selected_chapter, level_index)
-	var draft := progress.get_draft(data)
 	for y in range(5):
 		for x in range(5):
 			var cell := ColorRect.new()
 			cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			cell.custom_minimum_size = Vector2(15, 15)
-			var value := 0
-			if draft.size() == data.grid_size and draft[y] is Array and draft[y].size() == data.grid_size:
-				value = int(draft[y][x])
-			cell.color = data.preview_color if value == 1 else (Color("9ba7bd") if value == 2 else Color("eef1f7"))
+			cell.color = data.preview_color if unlocked and data.solution[y][x] == 1 else Color("d9deea")
 			preview.add_child(cell)
 	content.add_child(preview)
 
