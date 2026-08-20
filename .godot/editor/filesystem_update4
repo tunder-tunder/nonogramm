@@ -1,3 +1,4 @@
 res://scripts/game_manager.gd
 res://scripts/level_view.gd
 res://scenes/level.tscn
+res://NonogramTheme.tres
