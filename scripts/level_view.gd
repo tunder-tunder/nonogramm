@@ -6,9 +6,13 @@ signal next_level_pressed(current_level: LevelData)
 signal level_select_pressed()
 
 var level_data: LevelData
+var progress: SaveData
 var player_grid: Array = []  # 0 - пусто, 1 - закрашено, 2 - крестик
 var cell_size: int = 60
 var grid_container: GridContainer
+var cell_buttons: Array = []
+var filled_cell_style: StyleBoxFlat
+var empty_cell_style: StyleBoxFlat
 var _debug_enabled := OS.is_debug_build()
 
 @onready var row_hints_container: VBoxContainer = $RowHintsContainer
@@ -21,6 +25,11 @@ var _debug_enabled := OS.is_debug_build()
 @onready var victory_level_select_button: Button = $VictoryBanner/VictoryActions/LevelSelectButton
 @onready var victory_next_button: Button = $VictoryBanner/VictoryActions/NextLevelButton
 @onready var debug_label: Label = $DebugLabel
+@onready var companion_one: Control = $CompanionLane/CompanionOne
+@onready var companion_two: Control = $CompanionLane/CompanionTwo
+@onready var companion_one_texture: TextureRect = $CompanionLane/CompanionOne/Texture
+@onready var companion_two_texture: TextureRect = $CompanionLane/CompanionTwo/Texture
+var companion_time := 0.0
 
 const COLOR_FILLED = Color(0.12, 0.38, 0.85)       # Синий для ЛКМ
 const COLOR_EMPTY = Color.WHITE                    # Белая нейтральная клетка
@@ -36,9 +45,21 @@ func _ready():
 	debug_label.visible = _debug_enabled
 	_log_debug("Level view ready")
 
+func _process(delta: float) -> void:
+	companion_time += delta
+	companion_one.position.x = fmod(companion_time * 48.0, maxf(size.x - 90.0, 1.0))
+	companion_two.position.x = fmod(companion_time * 35.0 + size.x * 0.45, maxf(size.x - 90.0, 1.0))
+	companion_one.position.y = 7.0 + absf(sin(companion_time * 4.2)) * -10.0
+	companion_two.position.y = 8.0 + absf(sin(companion_time * 3.5 + 1.0)) * -8.0
+
+func configure(data: LevelData, save_data: SaveData) -> void:
+	progress = save_data
+	set_level_data(data)
+
 func set_level_data(data: LevelData):
 	level_data = data
-	level_label.text = data.level_name
+	level_label.text = "%s  ·  %d×%d" % [data.level_name, data.grid_size, data.grid_size]
+	cell_size = clampi(floori(440.0 / float(data.grid_size)), 8, 60)
 	check_button.disabled = false
 	victory_banner.visible = false
 	_validate_level_data()
@@ -48,8 +69,25 @@ func set_level_data(data: LevelData):
 		for x in range(data.grid_size):
 			row.append(0)
 		player_grid.append(row)
+	var draft := progress.get_draft(data) if progress else []
+	if draft.size() == data.grid_size:
+		player_grid = draft
+	var chapter: Dictionary = LevelCatalog.CHAPTERS[data.chapter_index]
+	_load_companion(companion_one_texture, $CompanionLane/CompanionOne/Placeholder, chapter.companion_paths[0])
+	_load_companion(companion_two_texture, $CompanionLane/CompanionTwo/Placeholder, chapter.companion_paths[1])
+	$CompanionLane/ChapterName.text = "%s · компаньоны главы" % chapter.title
 	_create_grid_ui()
 	_log_debug("Loaded %s (%dx%d)" % [data.level_name, data.grid_size, data.grid_size])
+
+func _load_companion(target: TextureRect, placeholder: Label, path: String) -> void:
+	if ResourceLoader.exists(path, "Texture2D"):
+		target.texture = load(path)
+		target.visible = true
+		placeholder.visible = false
+	else:
+		target.texture = null
+		target.visible = false
+		placeholder.visible = true
 
 func _create_grid_ui():
 	for child in main_grid_container.get_children():
@@ -61,9 +99,16 @@ func _create_grid_ui():
 
 	grid_container = GridContainer.new()
 	grid_container.columns = level_data.grid_size + 1
+	grid_container.add_theme_constant_override("h_separation", 0)
+	grid_container.add_theme_constant_override("v_separation", 0)
+	cell_buttons = []
+	filled_cell_style = _create_cell_style(COLOR_FILLED)
+	empty_cell_style = _create_cell_style(COLOR_EMPTY)
+	var hint_size := 76
+	var hint_font_size := clampi(cell_size - 1, 7, 16)
 
 	var corner = Control.new()
-	corner.custom_minimum_size = Vector2(60, 60)
+	corner.custom_minimum_size = Vector2(hint_size, hint_size)
 	grid_container.add_child(corner)
 
 	var col_hints = _calculate_col_hints()
@@ -72,7 +117,9 @@ func _create_grid_ui():
 		hint_label.text = "\n".join(col_hints[x])
 		hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		hint_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-		hint_label.custom_minimum_size = Vector2(cell_size, 60)
+		hint_label.custom_minimum_size = Vector2(cell_size, hint_size)
+		hint_label.clip_text = true
+		hint_label.add_theme_font_size_override("font_size", hint_font_size)
 		grid_container.add_child(hint_label)
 
 	var row_hints = _calculate_row_hints()
@@ -81,10 +128,13 @@ func _create_grid_ui():
 		hint_label.text = " ".join(row_hints[y])
 		hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 		hint_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		hint_label.custom_minimum_size = Vector2(60, cell_size)
+		hint_label.custom_minimum_size = Vector2(hint_size, cell_size)
+		hint_label.clip_text = true
+		hint_label.add_theme_font_size_override("font_size", hint_font_size)
 		grid_container.add_child(hint_label)
+		var button_row: Array[Button] = []
 		for x in range(level_data.grid_size):
-			var button = Button.new()
+			var button := Button.new()
 			button.custom_minimum_size = Vector2(cell_size, cell_size)
 			button.name = "Cell_%d_%d" % [x, y]
 			button.focus_mode = Control.FOCUS_NONE
@@ -92,6 +142,8 @@ func _create_grid_ui():
 			button.set_meta("cell_y", y)
 			button.connect("gui_input", _on_cell_gui_input.bind(x, y))
 			grid_container.add_child(button)
+			button_row.append(button)
+		cell_buttons.append(button_row)
 
 	main_grid_container.add_child(grid_container)
 	_update_grid_visuals()
@@ -141,42 +193,50 @@ func _on_cell_gui_input(event: InputEvent, x: int, y: int):
 			player_grid[y][x] = 0 if player_grid[y][x] == 2 else 2
 		else:
 			return
-		_update_grid_visuals()
+		_update_cell_visual(x, y)
+		if progress:
+			progress.save_draft(level_data, player_grid)
 		_log_debug("Cell (%d,%d) -> %d" % [x, y, player_grid[y][x]])
 
 func _update_grid_visuals():
 	for y in range(level_data.grid_size):
 		for x in range(level_data.grid_size):
-			var button = get_button(x, y)
-			if button:
-				button.text = ""
-				button.add_theme_color_override("font_color", COLOR_CROSS)
-				button.add_theme_color_override("font_hover_color", COLOR_CROSS)
-				button.add_theme_color_override("font_pressed_color", COLOR_CROSS)
-				if player_grid[y][x] == 1:
-					_apply_cell_style(button, COLOR_FILLED)
-				elif player_grid[y][x] == 2:
-					_apply_cell_style(button, COLOR_EMPTY)
-					button.text = "✕"
-				else:
-					_apply_cell_style(button, COLOR_EMPTY)
+			_update_cell_visual(x, y)
+
+func _update_cell_visual(x: int, y: int) -> void:
+	var button := get_button(x, y)
+	if not button:
+		return
+	button.text = ""
+	button.add_theme_color_override("font_color", COLOR_CROSS)
+	button.add_theme_color_override("font_hover_color", COLOR_CROSS)
+	button.add_theme_color_override("font_pressed_color", COLOR_CROSS)
+	button.add_theme_font_size_override("font_size", clampi(cell_size - 1, 7, 18))
+	if player_grid[y][x] == 1:
+		_apply_cell_style(button, COLOR_FILLED)
+	elif player_grid[y][x] == 2:
+		_apply_cell_style(button, COLOR_EMPTY)
+		button.text = "✕" if cell_size >= 12 else "·"
+	else:
+		_apply_cell_style(button, COLOR_EMPTY)
 
 func _apply_cell_style(button: Button, fill_color: Color):
-	var style = StyleBoxFlat.new()
-	style.bg_color = fill_color
-	style.border_color = COLOR_GRID_BORDER
-	style.set_border_width_all(1)
+	var style := filled_cell_style if fill_color == COLOR_FILLED else empty_cell_style
 	button.add_theme_stylebox_override("normal", style)
 	button.add_theme_stylebox_override("hover", style)
 	button.add_theme_stylebox_override("pressed", style)
 
+func _create_cell_style(fill_color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = fill_color
+	style.border_color = COLOR_GRID_BORDER
+	style.set_border_width_all(1)
+	return style
+
 func get_button(x: int, y: int) -> Button:
-	if not grid_container:
+	if y < 0 or y >= cell_buttons.size() or x < 0 or x >= cell_buttons[y].size():
 		return null
-	for child in grid_container.get_children():
-		if child is Button and child.has_meta("cell_x") and child.get_meta("cell_x") == x and child.get_meta("cell_y") == y:
-			return child
-	return null
+	return cell_buttons[y][x]
 
 func _on_check_pressed():
 	_check_solution()
@@ -203,6 +263,8 @@ func _check_solution():
 		level_label.text = "Неверно, попробуйте еще раз!"
 
 func _on_back_pressed():
+	if progress and level_data and not progress.is_completed(level_data.chapter_index, level_data.level_index):
+		progress.save_draft(level_data, player_grid)
 	back_to_menu_pressed.emit()
 
 func _on_level_select_pressed():
