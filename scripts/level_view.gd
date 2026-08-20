@@ -53,64 +53,64 @@ func _ready():
 		victory_banner.gui_input.connect(_on_banner_click)
 
 func set_level_data(data: LevelData):
-    level_data = data
-    level_label.text = data.level_name
-    
-    player_grid = []
-    for y in range(data.grid_size):
-        var row = []
-        for x in range(data.grid_size):
-            row.append(0)
-        player_grid.append(row)
-    
-    _create_grid_ui()
-    # Инициализируем визуальное состояние ячеек после создания сетки
-    _update_grid_visuals()
+	level_data = data
+	level_label.text = data.level_name
+	
+	player_grid = []
+	for y in range(data.grid_size):
+		var row = []
+		for x in range(data.grid_size):
+			row.append(0)
+		player_grid.append(row)
+	
+	_create_grid_ui()
+	# Инициализируем визуальное состояние ячеек после создания сетки
+	_update_grid_visuals()
 
 func _create_grid_ui():
-    for child in main_grid_container.get_children():
-        child.queue_free()
-    
-    grid_container = GridContainer.new()
-    grid_container.columns = level_data.grid_size + 1
-    
-    var corner = Control.new()
-    corner.custom_minimum_size = Vector2(60, 60)
-    grid_container.add_child(corner)
-    
-    var col_hints = _calculate_col_hints()
-    for x in range(level_data.grid_size):
-        var hint_label = Label.new()
-        hint_label.text = "\n".join(col_hints[x])
-        hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-        hint_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-        hint_label.custom_minimum_size = Vector2(cell_size, 60)
-        grid_container.add_child(hint_label)
-    
-    var row_hints = _calculate_row_hints()
-    for y in range(level_data.grid_size):
-        var hint_label = Label.new()
-        hint_label.text = " ".join(row_hints[y])
-        hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-        hint_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-        hint_label.custom_minimum_size = Vector2(60, cell_size)
-        grid_container.add_child(hint_label)
-        
-        for x in range(level_data.grid_size):
-            var button = Button.new()
-            button.custom_minimum_size = Vector2(cell_size, cell_size)
-            button.name = "Cell_%d_%d" % [x, y]
-            button.set_meta("cell_x", x)
-            button.set_meta("cell_y", y)
-            
-            # Не устанавливаем стили при создании - они будут установлены в _update_grid_visuals
-            button.focus_mode = Control.FOCUS_NONE
-            button.text = ""
-            
-            button.gui_input.connect(Callable(self, "_on_cell_gui_input").bind(x, y))
-            grid_container.add_child(button)
-    
-    main_grid_container.add_child(grid_container)
+	for child in main_grid_container.get_children():
+		child.queue_free()
+	
+	grid_container = GridContainer.new()
+	grid_container.columns = level_data.grid_size + 1
+	
+	var corner = Control.new()
+	corner.custom_minimum_size = Vector2(60, 60)
+	grid_container.add_child(corner)
+	
+	var col_hints = _calculate_col_hints()
+	for x in range(level_data.grid_size):
+		var hint_label = Label.new()
+		hint_label.text = "\n".join(col_hints[x])
+		hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		hint_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+		hint_label.custom_minimum_size = Vector2(cell_size, 60)
+		grid_container.add_child(hint_label)
+	
+	var row_hints = _calculate_row_hints()
+	for y in range(level_data.grid_size):
+		var hint_label = Label.new()
+		hint_label.text = " ".join(row_hints[y])
+		hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		hint_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		hint_label.custom_minimum_size = Vector2(60, cell_size)
+		grid_container.add_child(hint_label)
+		
+		for x in range(level_data.grid_size):
+			var button = Button.new()
+			button.custom_minimum_size = Vector2(cell_size, cell_size)
+			button.name = "Cell_%d_%d" % [x, y]
+			button.set_meta("cell_x", x)
+			button.set_meta("cell_y", y)
+			
+			# Не устанавливаем стили при создании - они будут установлены в _update_grid_visuals
+			button.focus_mode = Control.FOCUS_NONE
+			button.text = ""
+			
+			button.gui_input.connect(Callable(self, "_on_cell_gui_input").bind(x, y))
+			grid_container.add_child(button)
+	
+	main_grid_container.add_child(grid_container)
 
 func _calculate_row_hints() -> Array:
 	var hints = []
@@ -151,65 +151,65 @@ func _calculate_col_hints() -> Array:
 	return hints
 
 func _on_cell_gui_input(event: InputEvent, x: int, y: int):
-    if event is InputEventMouseButton and event.pressed:
-        get_viewport().set_input_as_handled()
-        
-        var current_state = player_grid[y][x]
-        
-        if event.button_index == MOUSE_BUTTON_LEFT:
-            if current_state == 0:
-                player_grid[y][x] = 1
-            elif current_state == 1:
-                player_grid[y][x] = 0
-            elif current_state == 2:
-                player_grid[y][x] = 1
-        elif event.button_index == MOUSE_BUTTON_RIGHT:
-            if current_state == 0:
-                player_grid[y][x] = 2
-            elif current_state == 2:
-                player_grid[y][x] = 0
-            elif current_state == 1:
-                player_grid[y][x] = 2
-        
-        # Принудительно обновляем стили кнопки сразу после изменения состояния
-        _update_grid_visuals()
+	if event is InputEventMouseButton and event.pressed:
+		get_viewport().set_input_as_handled()
+		
+		var current_state = player_grid[y][x]
+		
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			if current_state == 0:
+				player_grid[y][x] = 1
+			elif current_state == 1:
+				player_grid[y][x] = 0
+			elif current_state == 2:
+				player_grid[y][x] = 1
+		elif event.button_index == MOUSE_BUTTON_RIGHT:
+			if current_state == 0:
+				player_grid[y][x] = 2
+			elif current_state == 2:
+				player_grid[y][x] = 0
+			elif current_state == 1:
+				player_grid[y][x] = 2
+		
+		# Принудительно обновляем стили кнопки сразу после изменения состояния
+		_update_grid_visuals()
 
 func _update_grid_visuals():
-    for y in range(level_data.grid_size):
-        for x in range(level_data.grid_size):
-            var button = get_button(x, y)
-            if button:
-                # Полностью очищаем все переопределения стилей и цветов
-                button.remove_theme_stylebox_override("normal")
-                button.remove_theme_stylebox_override("hover")
-                button.remove_theme_stylebox_override("pressed")
-                button.remove_theme_stylebox_override("disabled")
-                button.remove_theme_stylebox_override("focused")
-                button.remove_theme_color_override("font_color")
-                button.remove_theme_font_size_override("font_size")
-                
-                var style: StyleBox
-                if player_grid[y][x] == 0:
-                    style = theme_resource.get_stylebox("empty", "Button")
-                    button.text = ""
-                elif player_grid[y][x] == 1:
-                    style = theme_resource.get_stylebox("filled", "Button")
-                    button.text = ""
-                elif player_grid[y][x] == 2:
-                    style = theme_resource.get_stylebox("cross", "Button")
-                    # Не устанавливаем текст для крестика, чтобы не растягивать ячейку
-                    button.text = ""
-                    # Устанавливаем синий цвет текста на случай если он нужен
-                    button.add_theme_color_override("font_color", Color(0, 0.5, 1, 1))
-                    # Маленький размер шрифта чтобы не растягивал ячейку
-                    button.add_theme_font_size_override("font_size", 1)
-                
-                if style:
-                    button.add_theme_stylebox_override("normal", style)
-                    button.add_theme_stylebox_override("hover", style)
-                    button.add_theme_stylebox_override("pressed", style)
-                    button.add_theme_stylebox_override("disabled", style)
-                    button.add_theme_stylebox_override("focused", style)
+	for y in range(level_data.grid_size):
+		for x in range(level_data.grid_size):
+			var button = get_button(x, y)
+			if button:
+				# Полностью очищаем все переопределения стилей и цветов
+				button.remove_theme_stylebox_override("normal")
+				button.remove_theme_stylebox_override("hover")
+				button.remove_theme_stylebox_override("pressed")
+				button.remove_theme_stylebox_override("disabled")
+				button.remove_theme_stylebox_override("focused")
+				button.remove_theme_color_override("font_color")
+				button.remove_theme_font_size_override("font_size")
+				
+				var style: StyleBox
+				if player_grid[y][x] == 0:
+					style = theme_resource.get_stylebox("empty", "Button")
+					button.text = ""
+				elif player_grid[y][x] == 1:
+					style = theme_resource.get_stylebox("filled", "Button")
+					button.text = ""
+				elif player_grid[y][x] == 2:
+					style = theme_resource.get_stylebox("cross", "Button")
+					# Не устанавливаем текст для крестика, чтобы не растягивать ячейку
+					button.text = ""
+					# Устанавливаем синий цвет текста на случай если он нужен
+					button.add_theme_color_override("font_color", Color(0, 0.5, 1, 1))
+					# Маленький размер шрифта чтобы не растягивал ячейку
+					button.add_theme_font_size_override("font_size", 1)
+				
+				if style:
+					button.add_theme_stylebox_override("normal", style)
+					button.add_theme_stylebox_override("hover", style)
+					button.add_theme_stylebox_override("pressed", style)
+					button.add_theme_stylebox_override("disabled", style)
+					button.add_theme_stylebox_override("focused", style)
 
 func get_button(x: int, y: int) -> Button:
 	if not grid_container:
