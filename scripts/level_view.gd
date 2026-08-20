@@ -17,10 +17,11 @@ var theme_resource: Theme
 @onready var check_button: Button = $CheckButton
 @onready var back_button: Button = $BackButton
 @onready var victory_banner: Panel = $VictoryBanner
-@onready var victory_message: Label = $VictoryBanner/VictoryMessage
-@onready var victory_buttons_container: HBoxContainer = $VictoryBanner/VictoryButtonsContainer
-@onready var menu_button: Button = $VictoryBanner/VictoryButtonsContainer/MenuButton
-@onready var next_level_button: Button = $VictoryBanner/VictoryButtonsContainer/NextLevelButton
+@onready var victory_vbox: VBoxContainer = $VictoryBanner/VictoryVBox
+@onready var victory_message: Label = $VictoryBanner/VictoryVBox/VictoryMessage
+@onready var victory_buttons_container: HBoxContainer = $VictoryBanner/VictoryVBox/VictoryButtonsContainer
+@onready var menu_button: Button = $VictoryBanner/VictoryVBox/VictoryButtonsContainer/MenuButton
+@onready var next_level_button: Button = $VictoryBanner/VictoryVBox/VictoryButtonsContainer/NextLevelButton
 
 func _ready():
 	# Загружаем тему

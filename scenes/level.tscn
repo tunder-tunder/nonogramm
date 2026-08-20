@@ -2,6 +2,18 @@
 
 [ext_resource type="Script" uid="uid://mwovji3jfybr" path="res://scripts/level_view.gd" id="1_level_view"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_empty"]
+bg_color = Color(1, 1, 1, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2, 0.2, 0.2, 1)
+cornerRadius_top_left = 2
+cornerRadius_top_right = 2
+cornerRadius_bottom_right = 2
+cornerRadius_bottom_left = 2
+
 [node name="LevelScene" type="Control" unique_id=1590877809]
 layout_mode = 3
 anchors_preset = 15
@@ -82,13 +94,21 @@ offset_right = 200.0
 offset_bottom = 100.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_empty")
 
-[node name="VictoryMessage" type="Label" parent="VictoryBanner" unique_id=1890087718]
+[node name="VictoryVBox" type="VBoxContainer" parent="VictoryBanner" unique_id=1890087719]
 layout_mode = 1
-offset_left = 20.0
-offset_top = 20.0
-offset_right = -20.0
-offset_bottom = 80.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 1
+theme_override_constants/separation = 10
+
+[node name="VictoryMessage" type="Label" parent="VictoryBanner/VictoryVBox" unique_id=1890087718]
+layout_mode = 2
+custom_minimum_size = Vector2(360, 60)
 grow_horizontal = 2
 text = "🎉 Поздравляем! 🎉
 Вы решили головоломку!"
@@ -96,28 +116,20 @@ horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
 
-[node name="VictoryButtonsContainer" type="HBoxContainer" parent="VictoryBanner" unique_id=1876813770]
-layout_mode = 1
-anchors_preset = 7
-anchor_left = 0.5
-anchor_top = 1.0
-anchor_right = 0.5
-anchor_bottom = 1.0
-offset_left = -160.0
-offset_top = -60.0
-offset_right = 160.0
-offset_bottom = -10.0
+[node name="VictoryButtonsContainer" type="HBoxContainer" parent="VictoryBanner/VictoryVBox" unique_id=1876813770]
+layout_mode = 2
+custom_minimum_size = Vector2(360, 50)
 grow_horizontal = 2
-grow_vertical = 0
 alignment = 1
+theme_override_constants/separation = 10
 
-[node name="MenuButton" type="Button" parent="VictoryBanner/VictoryButtonsContainer" unique_id=476745728]
+[node name="MenuButton" type="Button" parent="VictoryBanner/VictoryVBox/VictoryButtonsContainer" unique_id=476745728]
 custom_minimum_size = Vector2(140, 40)
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Главное меню"
 
-[node name="NextLevelButton" type="Button" parent="VictoryBanner/VictoryButtonsContainer" unique_id=111302853]
+[node name="NextLevelButton" type="Button" parent="VictoryBanner/VictoryVBox/VictoryButtonsContainer" unique_id=111302853]
 custom_minimum_size = Vector2(140, 40)
 layout_mode = 2
 size_flags_horizontal = 4
