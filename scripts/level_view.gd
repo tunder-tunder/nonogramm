@@ -48,9 +48,9 @@ func _ready():
 	var has_empty = theme_resource.has_stylebox("custom_empty", "Button")
 	var has_filled = theme_resource.has_stylebox("custom_filled", "Button")
 	var has_cross = theme_resource.has_stylebox("custom_cross", "Button")
-	_debug_print("  custom_empty: %s" % str(has_empty))
-	_debug_print("  custom_filled: %s" % str(has_filled))
-	_debug_print("  custom_cross: %s" % str(has_cross))
+	_debug_print("  empty: %s" % str(has_empty))
+	_debug_print("  filled: %s" % str(has_filled))
+	_debug_print("  cross: %s" % str(has_cross))
 	
 	# Применяем тему ко всем кнопкам сцены
 	_apply_theme_to_buttons()
@@ -139,7 +139,7 @@ func _create_grid_ui():
                     button.add_theme_stylebox_override("disabled", empty_style.duplicate())
                     button.add_theme_stylebox_override("focused", empty_style.duplicate())
                 else:
-                    _debug_print("WARNING: custom_empty style not found in theme!")
+                    _debug_print("WARNING: empty style not found in theme!")
             
             button.focus_mode = Control.FOCUS_NONE
             button.text = ""
@@ -240,16 +240,16 @@ func _update_single_cell(x: int, y: int):
     if player_grid[y][x] == 0:
         style = theme_resource.get_stylebox("custom_empty", "Button")
         button.text = ""
-        _debug_print("  Applying custom_empty style")
+        _debug_print("  Applying empty style")
     elif player_grid[y][x] == 1:
         style = theme_resource.get_stylebox("custom_filled", "Button")
         button.text = ""
-        _debug_print("  Applying custom_filled style (blue)")
+        _debug_print("  Applying filled style (blue)")
     elif player_grid[y][x] == 2:
         style = theme_resource.get_stylebox("custom_cross", "Button")
         # Не устанавливаем текст для крестика, чтобы не растягивать ячейку
         button.text = ""
-        _debug_print("  Applying custom_cross style (blue)")
+        _debug_print("  Applying cross style (blue)")
     
     if style:
         _debug_print("  Style found: %s" % str(style))

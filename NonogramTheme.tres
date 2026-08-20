@@ -38,6 +38,6 @@ corner_radius_bottom_left = 2
 
 [resource]
 resource_name = "NonogramTheme"
-custom_styles/custom_empty = SubResource("StyleBoxFlat_empty")
-custom_styles/custom_filled = SubResource("StyleBoxFlat_filled")
-custom_styles/custom_cross = SubResource("StyleBoxFlat_cross")
+custom_styles/empty = SubResource("StyleBoxFlat_empty")
+custom_styles/filled = SubResource("StyleBoxFlat_filled")
+custom_styles/cross = SubResource("StyleBoxFlat_cross")
