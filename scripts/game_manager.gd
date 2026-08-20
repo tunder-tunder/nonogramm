@@ -51,7 +51,7 @@ func load_level_select():
 	if level_select_scene.has_signal("level_selected"):
 		level_select_scene.connect("level_selected", load_level)
 	if level_select_scene.has_signal("back_to_menu_pressed"):
-		level_select_scene.connect("back_to_menu_pressed", load_main_menu)
+		level_select_scene.connect("back_to_menu_pressed", Callable(self, "load_main_menu"))
 
 func load_level(level_data: Resource):
 	_clear_current_scene()
