@@ -6,6 +6,7 @@ signal next_level_pressed(current_level: LevelData)
 signal level_select_pressed()
 
 var level_data: LevelData
+var progress: SaveData
 var player_grid: Array = []  # 0 - пусто, 1 - закрашено, 2 - крестик
 var cell_size: int = 60
 var grid_container: GridContainer
@@ -21,6 +22,11 @@ var _debug_enabled := OS.is_debug_build()
 @onready var victory_level_select_button: Button = $VictoryBanner/VictoryActions/LevelSelectButton
 @onready var victory_next_button: Button = $VictoryBanner/VictoryActions/NextLevelButton
 @onready var debug_label: Label = $DebugLabel
+@onready var companion_one: Control = $CompanionLane/CompanionOne
+@onready var companion_two: Control = $CompanionLane/CompanionTwo
+@onready var companion_one_texture: TextureRect = $CompanionLane/CompanionOne/Texture
+@onready var companion_two_texture: TextureRect = $CompanionLane/CompanionTwo/Texture
+var companion_time := 0.0
 
 const COLOR_FILLED = Color(0.12, 0.38, 0.85)       # Синий для ЛКМ
 const COLOR_EMPTY = Color.WHITE                    # Белая нейтральная клетка
@@ -36,6 +42,17 @@ func _ready():
 	debug_label.visible = _debug_enabled
 	_log_debug("Level view ready")
 
+func _process(delta: float) -> void:
+	companion_time += delta
+	companion_one.position.x = fmod(companion_time * 48.0, maxf(size.x - 90.0, 1.0))
+	companion_two.position.x = fmod(companion_time * 35.0 + size.x * 0.45, maxf(size.x - 90.0, 1.0))
+	companion_one.position.y = 7.0 + absf(sin(companion_time * 4.2)) * -10.0
+	companion_two.position.y = 8.0 + absf(sin(companion_time * 3.5 + 1.0)) * -8.0
+
+func configure(data: LevelData, save_data: SaveData) -> void:
+	progress = save_data
+	set_level_data(data)
+
 func set_level_data(data: LevelData):
 	level_data = data
 	level_label.text = data.level_name
@@ -48,8 +65,25 @@ func set_level_data(data: LevelData):
 		for x in range(data.grid_size):
 			row.append(0)
 		player_grid.append(row)
+	var draft := progress.get_draft(data) if progress else []
+	if draft.size() == data.grid_size:
+		player_grid = draft
+	var chapter: Dictionary = LevelCatalog.CHAPTERS[data.chapter_index]
+	_load_companion(companion_one_texture, $CompanionLane/CompanionOne/Placeholder, chapter.companion_paths[0])
+	_load_companion(companion_two_texture, $CompanionLane/CompanionTwo/Placeholder, chapter.companion_paths[1])
+	$CompanionLane/ChapterName.text = "%s · компаньоны главы" % chapter.title
 	_create_grid_ui()
 	_log_debug("Loaded %s (%dx%d)" % [data.level_name, data.grid_size, data.grid_size])
+
+func _load_companion(target: TextureRect, placeholder: Label, path: String) -> void:
+	if ResourceLoader.exists(path, "Texture2D"):
+		target.texture = load(path)
+		target.visible = true
+		placeholder.visible = false
+	else:
+		target.texture = null
+		target.visible = false
+		placeholder.visible = true
 
 func _create_grid_ui():
 	for child in main_grid_container.get_children():
@@ -142,6 +176,8 @@ func _on_cell_gui_input(event: InputEvent, x: int, y: int):
 		else:
 			return
 		_update_grid_visuals()
+		if progress:
+			progress.save_draft(level_data, player_grid)
 		_log_debug("Cell (%d,%d) -> %d" % [x, y, player_grid[y][x]])
 
 func _update_grid_visuals():
@@ -203,6 +239,8 @@ func _check_solution():
 		level_label.text = "Неверно, попробуйте еще раз!"
 
 func _on_back_pressed():
+	if progress and level_data and not progress.is_completed(level_data.chapter_index, level_data.level_index):
+		progress.save_draft(level_data, player_grid)
 	back_to_menu_pressed.emit()
 
 func _on_level_select_pressed():
