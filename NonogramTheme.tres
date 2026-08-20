@@ -1,6 +1,4 @@
-[gd_resource type="Theme" format=3 uid="uid://c2q8w5yay301a"]
-
-[resource]
+[gd_resource type="Theme" load_steps=4 format=3 uid="uid://c2q8w5yay301a"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_empty"]
 bg_color = Color(1, 1, 1, 1)
@@ -9,10 +7,10 @@ border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.3, 0.3, 0.3, 1)
-cornerRadius_top_left = 2
-cornerRadius_top_right = 2
-cornerRadius_bottom_right = 2
-cornerRadius_bottom_left = 2
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_filled"]
 bg_color = Color(0, 0.5, 1, 1)
@@ -21,10 +19,10 @@ border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0, 0.3, 0.6, 1)
-cornerRadius_top_left = 2
-cornerRadius_top_right = 2
-cornerRadius_bottom_right = 2
-cornerRadius_bottom_left = 2
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cross"]
 bg_color = Color(0, 0.5, 1, 1)
@@ -33,11 +31,13 @@ border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0, 0.3, 0.6, 1)
-cornerRadius_top_left = 2
-cornerRadius_top_right = 2
-cornerRadius_bottom_right = 2
-cornerRadius_bottom_left = 2
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
 
-[stylebox:"empty":"Button"] = SubResource("StyleBoxFlat_empty")
-[stylebox:"filled":"Button"] = SubResource("StyleBoxFlat_filled")
-[stylebox:"cross":"Button"] = SubResource("StyleBoxFlat_cross")
+[resource]
+resource_name = "NonogramTheme"
+custom_styles/custom_empty = SubResource("StyleBoxFlat_empty")
+custom_styles/custom_filled = SubResource("StyleBoxFlat_filled")
+custom_styles/custom_cross = SubResource("StyleBoxFlat_cross")

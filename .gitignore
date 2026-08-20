@@ -2,18 +2,20 @@
 # Build artifacts
 *.import
 *.remap
-.runtime_ids
 export_presets.cfg
-# Dependencies
-addons/
+
 # Editor
 .vscode/
 .idea/
-*.tmp
-*.bak
-*.backup
+
+# OS
+.DS_Store
+Thumbs.db
+
 # Logs
 *.log
-# Configuration
-*.autosave
+
+# Temporary files
+*.tmp
+*.temp
 ```
