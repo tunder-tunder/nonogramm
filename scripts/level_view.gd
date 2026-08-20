@@ -27,6 +27,11 @@ func _ready():
 	# Загружаем тему
 	theme_resource = load("res://NonogramTheme.tres")
 	
+	# Проверяем что тема загрузилась корректно
+	if not theme_resource:
+		push_error("Failed to load NonogramTheme.tres!")
+		return
+	
 	# Применяем тему ко всем кнопкам сцены
 	_apply_theme_to_buttons()
 	
@@ -64,8 +69,7 @@ func set_level_data(data: LevelData):
         player_grid.append(row)
     
     _create_grid_ui()
-    # Инициализируем визуальное состояние ячеек после создания сетки
-    _update_grid_visuals()
+    # Не вызываем _update_grid_visuals здесь, так как стили уже применяются при создании кнопок
 
 func _create_grid_ui():
     for child in main_grid_container.get_children():
@@ -103,7 +107,16 @@ func _create_grid_ui():
             button.set_meta("cell_x", x)
             button.set_meta("cell_y", y)
             
-            # Не устанавливаем стили при создании - они будут установлены в _update_grid_visuals
+            # Применяем начальный стиль (empty) сразу при создании
+            if theme_resource:
+                var empty_style = theme_resource.get_stylebox("empty", "Button")
+                if empty_style:
+                    button.add_theme_stylebox_override("normal", empty_style.duplicate())
+                    button.add_theme_stylebox_override("hover", empty_style.duplicate())
+                    button.add_theme_stylebox_override("pressed", empty_style.duplicate())
+                    button.add_theme_stylebox_override("disabled", empty_style.duplicate())
+                    button.add_theme_stylebox_override("focused", empty_style.duplicate())
+            
             button.focus_mode = Control.FOCUS_NONE
             button.text = ""
             
@@ -172,7 +185,43 @@ func _on_cell_gui_input(event: InputEvent, x: int, y: int):
                 player_grid[y][x] = 2
         
         # Принудительно обновляем стили кнопки сразу после изменения состояния
-        _update_grid_visuals()
+        _update_single_cell(x, y)
+
+func _update_single_cell(x: int, y: int):
+    var button = get_button(x, y)
+    if not button:
+        return
+    
+    # Полностью очищаем все переопределения стилей и цветов
+    button.remove_theme_stylebox_override("normal")
+    button.remove_theme_stylebox_override("hover")
+    button.remove_theme_stylebox_override("pressed")
+    button.remove_theme_stylebox_override("disabled")
+    button.remove_theme_stylebox_override("focused")
+    button.remove_theme_color_override("font_color")
+    button.remove_theme_font_size_override("font_size")
+    
+    var style: StyleBox
+    if player_grid[y][x] == 0:
+        style = theme_resource.get_stylebox("empty", "Button")
+        button.text = ""
+    elif player_grid[y][x] == 1:
+        style = theme_resource.get_stylebox("filled", "Button")
+        button.text = ""
+    elif player_grid[y][x] == 2:
+        style = theme_resource.get_stylebox("cross", "Button")
+        # Не устанавливаем текст для крестика, чтобы не растягивать ячейку
+        button.text = ""
+    
+    if style:
+        button.add_theme_stylebox_override("normal", style.duplicate())
+        button.add_theme_stylebox_override("hover", style.duplicate())
+        button.add_theme_stylebox_override("pressed", style.duplicate())
+        button.add_theme_stylebox_override("disabled", style.duplicate())
+        button.add_theme_stylebox_override("focused", style.duplicate())
+    
+    # Принудительно обновляем кнопку
+    button.queue_redraw()
 
 func _update_grid_visuals():
     for y in range(level_data.grid_size):
@@ -199,17 +248,16 @@ func _update_grid_visuals():
                     style = theme_resource.get_stylebox("cross", "Button")
                     # Не устанавливаем текст для крестика, чтобы не растягивать ячейку
                     button.text = ""
-                    # Устанавливаем синий цвет текста на случай если он нужен
-                    button.add_theme_color_override("font_color", Color(0, 0.5, 1, 1))
-                    # Маленький размер шрифта чтобы не растягивал ячейку
-                    button.add_theme_font_size_override("font_size", 1)
                 
                 if style:
-                    button.add_theme_stylebox_override("normal", style)
-                    button.add_theme_stylebox_override("hover", style)
-                    button.add_theme_stylebox_override("pressed", style)
-                    button.add_theme_stylebox_override("disabled", style)
-                    button.add_theme_stylebox_override("focused", style)
+                    button.add_theme_stylebox_override("normal", style.duplicate())
+                    button.add_theme_stylebox_override("hover", style.duplicate())
+                    button.add_theme_stylebox_override("pressed", style.duplicate())
+                    button.add_theme_stylebox_override("disabled", style.duplicate())
+                    button.add_theme_stylebox_override("focused", style.duplicate())
+                
+                # Принудительно обновляем кнопку
+                button.queue_redraw()
 
 func get_button(x: int, y: int) -> Button:
 	if not grid_container:
