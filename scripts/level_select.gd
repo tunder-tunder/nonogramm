@@ -8,10 +8,11 @@ var progress: SaveData
 var selected_chapter := 0
 
 @onready var chapter_tabs: HBoxContainer = $Margin/Page/ChapterTabs
-@onready var chapter_title: Label = $Margin/Page/ChapterHeader/Copy/ChapterTitle
-@onready var chapter_subtitle: Label = $Margin/Page/ChapterHeader/Copy/ChapterSubtitle
-@onready var chapter_icon: Label = $Margin/Page/ChapterHeader/ChapterIcon
-@onready var progress_label: Label = $Margin/Page/ChapterHeader/Progress
+@onready var chapter_header: PanelContainer = $Margin/Page/ChapterHeader
+@onready var chapter_title: Label = $Margin/Page/ChapterHeader/HeaderMargin/HeaderRow/Copy/ChapterTitle
+@onready var chapter_subtitle: Label = $Margin/Page/ChapterHeader/HeaderMargin/HeaderRow/Copy/ChapterSubtitle
+@onready var chapter_icon: Label = $Margin/Page/ChapterHeader/HeaderMargin/HeaderRow/ChapterIcon
+@onready var progress_label: Label = $Margin/Page/ChapterHeader/HeaderMargin/HeaderRow/Progress
 @onready var level_grid: GridContainer = $Margin/Page/LevelGrid
 @onready var continue_button: Button = $Margin/Page/Footer/ContinueButton
 
@@ -28,6 +29,7 @@ func _ready() -> void:
 
 func _build_chapter_tabs() -> void:
 	for child in chapter_tabs.get_children():
+		chapter_tabs.remove_child(child)
 		child.queue_free()
 	for index in range(LevelCatalog.CHAPTERS.size()):
 		var info: Dictionary = LevelCatalog.CHAPTERS[index]
@@ -37,6 +39,13 @@ func _build_chapter_tabs() -> void:
 		button.text = "%s  %d" % [info.icon, index + 1] if progress.is_chapter_unlocked(index) else "🔒  %d" % (index + 1)
 		button.disabled = not progress.is_chapter_unlocked(index)
 		button.tooltip_text = info.title
+		button.set_meta("chapter_index", index)
+		button.add_theme_color_override("font_color", Color("24314d"))
+		button.add_theme_color_override("font_hover_color", Color("17213a"))
+		button.add_theme_color_override("font_disabled_color", Color("8791a5"))
+		button.add_theme_stylebox_override("normal", _make_style(Color("ffffff"), Color("d9dfeb"), 1, 12))
+		button.add_theme_stylebox_override("hover", _make_style(Color("edf3ff"), info.color, 2, 12))
+		button.add_theme_stylebox_override("disabled", _make_style(Color("e7eaf1"), Color("d4d9e3"), 1, 12))
 		button.pressed.connect(_show_chapter.bind(index))
 		chapter_tabs.add_child(button)
 
@@ -46,6 +55,8 @@ func _show_chapter(chapter: int) -> void:
 	chapter_title.text = "ГЛАВА %d · %s" % [chapter + 1, info.title]
 	chapter_subtitle.text = "%s  •  Компаньоны %s %s" % [info.subtitle, info.companion, info.companion_alt]
 	chapter_icon.text = info.icon
+	chapter_header.add_theme_stylebox_override("panel", _make_style(info.color.darkened(0.35), info.color.lightened(0.12), 2, 18))
+	_style_chapter_tabs()
 	var completed := progress.completed_in_chapter(chapter)
 	progress_label.text = "%d / 10\nЗАВЕРШЕНО" % completed
 	continue_button.text = "Продолжить · уровень %d" % [progress.last_level + 1] if chapter == progress.last_chapter else "Играть главу"
@@ -53,6 +64,7 @@ func _show_chapter(chapter: int) -> void:
 
 func _rebuild_levels() -> void:
 	for child in level_grid.get_children():
+		level_grid.remove_child(child)
 		child.queue_free()
 	for level_index in range(10):
 		level_grid.add_child(_create_level_card(level_index))
@@ -63,7 +75,14 @@ func _create_level_card(level_index: int) -> Control:
 	var button := Button.new()
 	button.custom_minimum_size = Vector2(190, 170)
 	button.disabled = not unlocked
+	button.tooltip_text = "Продолжить уровень %d" % (level_index + 1) if unlocked else "Сначала пройдите предыдущий уровень"
 	button.pressed.connect(_select_level.bind(level_index))
+	var chapter_color: Color = LevelCatalog.CHAPTERS[selected_chapter].color
+	var card_color := Color("ffffff") if unlocked else Color("e7eaf0")
+	button.add_theme_stylebox_override("normal", _make_style(card_color, chapter_color.lightened(0.35), 2, 16))
+	button.add_theme_stylebox_override("hover", _make_style(Color("f7faff"), chapter_color, 3, 16))
+	button.add_theme_stylebox_override("pressed", _make_style(Color("edf3ff"), chapter_color.darkened(0.12), 3, 16))
+	button.add_theme_stylebox_override("disabled", _make_style(Color("e7eaf0"), Color("cdd3de"), 1, 16))
 
 	var content := VBoxContainer.new()
 	content.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -75,19 +94,37 @@ func _create_level_card(level_index: int) -> Control:
 	number.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	number.text = "УРОВЕНЬ %02d" % (level_index + 1)
 	number.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	number.add_theme_color_override("font_color", Color("24314d") if unlocked else Color("8791a5"))
+	number.add_theme_font_size_override("font_size", 16)
 	content.add_child(number)
 
 	var preview := GridContainer.new()
 	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	preview.columns = 5
 	preview.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	preview.add_theme_constant_override("h_separation", 2)
+	preview.add_theme_constant_override("v_separation", 2)
 	var data := _get_level(selected_chapter, level_index)
+	var draft := progress.get_draft(data)
 	for y in range(5):
 		for x in range(5):
-			var cell := ColorRect.new()
+			var cell := PanelContainer.new()
 			cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			cell.custom_minimum_size = Vector2(15, 15)
-			cell.color = data.preview_color if unlocked and data.solution[y][x] == 1 else Color("d9deea")
+			cell.custom_minimum_size = Vector2(17, 17)
+			var value := 0
+			if draft.size() == data.grid_size and draft[y] is Array and draft[y].size() == data.grid_size:
+				value = int(draft[y][x])
+			var fill := data.preview_color if value == 1 else Color("f5f7fb")
+			cell.add_theme_stylebox_override("panel", _make_cell_style(fill))
+			if value == 2:
+				var cross := Label.new()
+				cross.mouse_filter = Control.MOUSE_FILTER_IGNORE
+				cross.text = "×"
+				cross.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+				cross.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+				cross.add_theme_color_override("font_color", Color("69758d"))
+				cross.add_theme_font_size_override("font_size", 12)
+				cell.add_child(cross)
 			preview.add_child(cell)
 	content.add_child(preview)
 
@@ -95,9 +132,39 @@ func _create_level_card(level_index: int) -> Control:
 	status.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	status.text = "✓ ПРОЙДЕН" if completed else ("ДОСТУПЕН" if unlocked else "🔒 ЗАКРЫТ")
-	status.modulate = Color("4e9d78") if completed else Color("778097")
+	status.add_theme_color_override("font_color", Color("318463") if completed else (Color("53627b") if unlocked else Color("8791a5")))
 	content.add_child(status)
 	return button
+
+func _style_chapter_tabs() -> void:
+	var accent: Color = LevelCatalog.CHAPTERS[selected_chapter].color
+	for child in chapter_tabs.get_children():
+		if child is Button and child.get_meta("chapter_index", -1) == selected_chapter:
+			child.add_theme_color_override("font_color", Color.WHITE)
+			child.add_theme_stylebox_override("normal", _make_style(accent.darkened(0.18), accent, 2, 12))
+		else:
+			child.add_theme_color_override("font_color", Color("24314d"))
+			child.add_theme_stylebox_override("normal", _make_style(Color("ffffff"), Color("d9dfeb"), 1, 12))
+
+func _make_style(background: Color, border: Color, width: int, radius: int) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = background
+	style.border_color = border
+	style.set_border_width_all(width)
+	style.set_corner_radius_all(radius)
+	style.content_margin_left = 12
+	style.content_margin_top = 10
+	style.content_margin_right = 12
+	style.content_margin_bottom = 10
+	return style
+
+func _make_cell_style(background: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = background
+	style.border_color = Color("d2d8e4")
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(3)
+	return style
 
 func _continue_game() -> void:
 	var target := progress.last_level if selected_chapter == progress.last_chapter else 0
