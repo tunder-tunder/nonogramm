@@ -1,1 +1,57 @@
-Nothing should be ignored based on the provided file changes. The only modified file is 'scripts/level_view.gd', which appears to be a source code file and should not be added to .gitignore.
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.class
+*.out
+
+# Dependencies
+node_modules/
+venv/
+.venv/
+.env
+.env.local
+*.env.*
+
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+*.swo
+
+# Editors
+.vscode/
+.idea/
+
+# Coverage reports
+coverage/
+htmlcov/
+.coverage
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# MyPy cache
+.mypy_cache/
+# Pytest cache
+.pytest_cache/
+
+# Gradle
+.gradle/
+target/
+
+# Julia
+julia-*/
+
+# Zig
+zig*/
