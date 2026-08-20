@@ -1,0 +1,10 @@
+res://scenes/level.tscn
+res://scenes/level_select.tscn
+res://scripts/game_manager.gd
+res://scripts/level_select.gd
+res://scripts/level_view.gd
+res://levels/level_2.tres
+res://scenes/main_menu.tscn
+res://scripts/main_menu.gd
+res://Main.tscn
+res://themes/game_theme.tres

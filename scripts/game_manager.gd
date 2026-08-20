@@ -3,6 +3,7 @@ extends Node
 signal scene_changed(new_scene: Node)
 
 var current_scene: Node = null
+var unlocked_gallery_levels: int = 0
 var levels: Array[LevelData] = [
 	preload("res://levels/level_1.tres"),
 	preload("res://levels/level_2.tres")
@@ -81,3 +82,6 @@ func _clear_current_scene():
 	if current_scene:
 		current_scene.queue_free()
 		current_scene = null
+		
+func quit_game():
+		get_tree().quit()
