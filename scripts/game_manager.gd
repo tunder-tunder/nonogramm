@@ -18,6 +18,30 @@ func load_main_menu():
 	current_scene = main_menu_scene
 	if main_menu_scene.has_signal("start_game_pressed"):
 		main_menu_scene.connect("start_game_pressed", load_level_select)
+	if main_menu_scene.has_signal("settings_pressed"):
+		main_menu_scene.connect("settings_pressed", load_settings_menu)
+	if main_menu_scene.has_signal("gallery_pressed"):
+		main_menu_scene.connect("gallery_pressed", load_gallery_menu)
+	if main_menu_scene.has_signal("exit_pressed"):
+		main_menu_scene.connect("exit_pressed", quit_game)
+
+func load_settings_menu():
+	_clear_current_scene()
+	var settings_scene = preload("res://scenes/settings_menu.tscn").instantiate()
+	add_child(settings_scene)
+	current_scene = settings_scene
+	if settings_scene.has_signal("back_to_menu_pressed"):
+		settings_scene.connect("back_to_menu_pressed", load_main_menu)
+
+func load_gallery_menu():
+	_clear_current_scene()
+	var gallery_scene = preload("res://scenes/gallery_menu.tscn").instantiate()
+	add_child(gallery_scene)
+	current_scene = gallery_scene
+	if gallery_scene.has_method("set_unlocked_levels"):
+		gallery_scene.set_unlocked_levels(unlocked_gallery_levels)
+	if gallery_scene.has_signal("back_to_menu_pressed"):
+		gallery_scene.connect("back_to_menu_pressed", load_main_menu)
 
 func load_level_select():
 	_clear_current_scene()
