@@ -39,8 +39,6 @@ func load_gallery_menu():
 	var gallery_scene = preload("res://scenes/gallery_menu.tscn").instantiate()
 	add_child(gallery_scene)
 	current_scene = gallery_scene
-	if gallery_scene.has_method("set_unlocked_levels"):
-		gallery_scene.set_unlocked_levels(unlocked_gallery_levels)
 	if gallery_scene.has_signal("back_to_menu_pressed"):
 		gallery_scene.connect("back_to_menu_pressed", load_main_menu)
 
