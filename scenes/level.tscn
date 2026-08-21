@@ -224,6 +224,10 @@ grow_horizontal = 0
 grow_vertical = 2
 mouse_filter = 2
 
+[node name="ChapterName" type="Label" parent="CompanionLane"]
+visible = false
+mouse_filter = 2
+
 [node name="CompanionOne" type="Control" parent="CompanionLane"]
 offset_left = 11.0
 offset_right = 65.0

@@ -46,26 +46,35 @@ static func _load_solution(global_index: int, size: int) -> Array:
 		return _empty_solution(size)
 
 	var template_text := FileAccess.get_file_as_string(path).trim_suffix("\n").trim_suffix("\r")
-	var lines := template_text.split("\n")
-	if lines.size() != size:
-		push_error("%s has %d rows, expected %d" % [path, lines.size(), size])
+	var lines: Array[String] = []
+	for raw_line in template_text.split("\n"):
+		var candidate := raw_line.trim_suffix("\r")
+		if candidate.length() == size and _is_solution_row(candidate):
+			lines.append(candidate)
+	if lines.size() < size:
+		push_error("%s has %d valid rows, expected %d" % [path, lines.size(), size])
 		return _empty_solution(size)
+	if lines.size() > size:
+		# Keep the loader usable after editor merge artifacts or stale appended
+		# rows: select a centered square and report the repair without aborting.
+		push_warning("%s has %d valid rows, using the centered %d" % [path, lines.size(), size])
+		var first_row := floori(float(lines.size() - size) / 2.0)
+		lines = lines.slice(first_row, first_row + size)
 
 	var solution := []
 	for row_index in range(size):
-		var text := lines[row_index].trim_suffix("\r")
-		if text.length() != size:
-			push_error("%s row %d has %d cells, expected %d" % [path, row_index + 1, text.length(), size])
-			return _empty_solution(size)
-
+		var text := lines[row_index]
 		var row := []
 		for cell in text:
-			if cell != "." and cell != "#":
-				push_error("%s contains '%s'; use only '.' and '#'" % [path, cell])
-				return _empty_solution(size)
 			row.append(1 if cell == "#" else 0)
 		solution.append(row)
 	return solution
+
+static func _is_solution_row(text: String) -> bool:
+	for cell in text:
+		if cell != "." and cell != "#":
+			return false
+	return true
 
 static func _empty_solution(size: int) -> Array:
 	var solution := []
