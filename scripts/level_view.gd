@@ -48,6 +48,7 @@ const COLOR_GRID_GROUP = Color("c9d0da")
 const COLOR_GRID_MAJOR_GROUP = Color("202733")
 const COLOR_HINT = Color("26364d")
 const COLOR_HINT_SOLVED = Color("8b96a6")
+const LARGE_GRID_TOTAL_SIZE := 460
 
 func _ready():
 	back_button.connect("pressed", _on_back_pressed)
@@ -62,10 +63,10 @@ func _ready():
 
 func _process(delta: float) -> void:
 	companion_time += delta
-	companion_one.position.x = fmod(companion_time * 48.0, maxf(size.x - 90.0, 1.0))
-	companion_two.position.x = fmod(companion_time * 35.0 + size.x * 0.45, maxf(size.x - 90.0, 1.0))
-	companion_one.position.y = 7.0 + absf(sin(companion_time * 4.2)) * -10.0
-	companion_two.position.y = 8.0 + absf(sin(companion_time * 3.5 + 1.0)) * -8.0
+	var lane_height := maxf($CompanionLane.size.y - 54.0, 1.0)
+	var companion_x := maxf(($CompanionLane.size.x - 54.0) * 0.5, 0.0)
+	companion_one.position = Vector2(companion_x, fmod(companion_time * 42.0, lane_height))
+	companion_two.position = Vector2(companion_x, lane_height - fmod(companion_time * 32.0, lane_height))
 	if level_running:
 		elapsed_seconds += delta
 		autosave_accumulator += delta
@@ -81,7 +82,9 @@ func configure(data: LevelData, save_data: SaveData) -> void:
 func set_level_data(data: LevelData):
 	level_data = data
 	level_label.text = "%s  ·  %d×%d" % [data.level_name, data.grid_size, data.grid_size]
-	cell_size = clampi(floori(440.0 / float(data.grid_size)), 8, 60)
+	var hint_size := _get_hint_area_size(data.grid_size)
+	var cell_budget := 440 if data.grid_size <= 25 else LARGE_GRID_TOTAL_SIZE - hint_size
+	cell_size = clampi(floori(float(cell_budget) / float(data.grid_size)), 6, 60)
 	elapsed_seconds = progress.get_elapsed_time(data) if progress else 0.0
 	autosave_accumulator = 0.0
 	level_running = not (progress and progress.is_completed(data.chapter_index, data.level_index))
@@ -102,7 +105,6 @@ func set_level_data(data: LevelData):
 	var chapter: Dictionary = LevelCatalog.CHAPTERS[data.chapter_index]
 	_load_companion(companion_one_texture, $CompanionLane/CompanionOne/Placeholder, chapter.companion_paths[0])
 	_load_companion(companion_two_texture, $CompanionLane/CompanionTwo/Placeholder, chapter.companion_paths[1])
-	$CompanionLane/ChapterName.text = "%s · компаньоны главы" % chapter.title
 	_create_grid_ui()
 	_log_debug("Loaded %s (%dx%d)" % [data.level_name, data.grid_size, data.grid_size])
 
@@ -132,7 +134,7 @@ func _create_grid_ui():
 	cell_style_cache.clear()
 	row_hint_labels = []
 	col_hint_labels = []
-	var hint_size := 112
+	var hint_size := _get_hint_area_size(level_data.grid_size)
 	var hint_font_size := clampi(cell_size - 1, 7, 16)
 
 	var corner = Control.new()
@@ -183,6 +185,11 @@ func _create_grid_ui():
 	main_grid_container.add_child(grid_container)
 	_update_grid_visuals()
 	_update_all_hint_states()
+
+func _get_hint_area_size(grid_size: int) -> int:
+	# Compact clue gutters leave enough room for the full 30×30–50×50 board
+	# between the information banner and the action buttons.
+	return 80 if grid_size > 25 else 112
 
 func _create_hint_label(text: String, font_size: int, column_hint: bool) -> Label:
 	var label := Label.new()
@@ -303,9 +310,9 @@ func _create_cell_style(fill_color: Color) -> StyleBoxFlat:
 func _add_group_separators(button: Button, x: int, y: int) -> void:
 	var right_group := _get_group_strength(x + 1)
 	var bottom_group := _get_group_strength(y + 1)
-	if right_group > 0:
+	if right_group > 0 and x + 1 < level_data.grid_size:
 		button.add_child(_create_separator(true, right_group))
-	if bottom_group > 0:
+	if bottom_group > 0 and y + 1 < level_data.grid_size:
 		button.add_child(_create_separator(false, bottom_group))
 
 func _get_group_strength(edge: int) -> int:
