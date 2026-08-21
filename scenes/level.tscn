@@ -13,6 +13,16 @@ grow_vertical = 2
 theme = ExtResource("2_game_theme")
 script = ExtResource("1_level_view")
 
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
+
 [node name="LevelLabel" type="Label" parent="."]
 layout_mode = 1
 anchors_preset = 10
@@ -25,6 +35,7 @@ offset_bottom = 40.0
 grow_horizontal = 2
 text = "Уровень"
 horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.149, 0.212, 0.302, 1)
 
 [node name="InfoBanner" type="Panel" parent="."]
 layout_mode = 1
@@ -192,6 +203,7 @@ grow_horizontal = 0
 grow_vertical = 0
 text = "[Nonogram Debug]"
 horizontal_alignment = 2
+theme_override_colors/font_color = Color(0.33, 0.38, 0.47, 1)
 
 [node name="CompanionLane" type="Panel" parent="."]
 layout_mode = 1
