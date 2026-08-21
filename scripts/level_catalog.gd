@@ -4,7 +4,7 @@ class_name LevelCatalog
 const LEVELS_PER_CHAPTER := 10
 const LEVEL_TEMPLATE_PATH := "res://levels/solutions/level_%02d.txt"
 const LEVEL_SIZES := [
-	[5, 5, 5, 5, 5, 10, 10, 10, 10, 10],
+	[5, 5, 10, 10, 10, 10, 10, 10, 10, 10],
 	[10, 10, 10, 10, 10, 15, 15, 15, 15, 15],
 	[15, 15, 15, 15, 15, 20, 20, 20, 20, 20],
 	[20, 20, 20, 20, 20, 25, 25, 25, 25, 25],
@@ -12,7 +12,7 @@ const LEVEL_SIZES := [
 ]
 
 const CHAPTERS := [
-	{"title": "Лес светлячков", "subtitle": "Тихие тропы", "icon": "🌿", "companion_names": "Лесные друзья", "companion_paths": ["res://assets/companions/chapter_01_a.png", "res://assets/companions/chapter_01_b.png"], "gallery_path": "res://assets/gallery/chapter_01.png", "color": Color("75b798"), "reward": "Ночной пикник"},
+	{"title": "Розовый офис", "subtitle": "Корпоративные будни", "icon": "💼", "companion_names": "Офисные друзья", "companion_paths": ["res://assets/companions/chapter_01_a.png", "res://assets/companions/chapter_01_b.png"], "gallery_path": "res://assets/gallery/chapter_01.png", "color": Color("5b3a2e"), "secondary_color": Color("e8a6d2"), "background_color": Color("fff4fb"), "reward": "Пятничный кофе"},
 	{"title": "Медовая деревня", "subtitle": "Тёплые крыши", "icon": "🍯", "companion_names": "Медовые друзья", "companion_paths": ["res://assets/companions/chapter_02_a.png", "res://assets/companions/chapter_02_b.png"], "gallery_path": "res://assets/gallery/chapter_02.png", "color": Color("e6ad5c"), "reward": "Праздник фонарей"},
 	{"title": "Облачный порт", "subtitle": "Выше ветра", "icon": "☁️", "companion_names": "Небесные друзья", "companion_paths": ["res://assets/companions/chapter_03_a.png", "res://assets/companions/chapter_03_b.png"], "gallery_path": "res://assets/gallery/chapter_03.png", "color": Color("70aee8"), "reward": "Полёт над городом"},
 	{"title": "Сад созвездий", "subtitle": "Цветы и звёзды", "icon": "🌙", "companion_names": "Звёздные друзья", "companion_paths": ["res://assets/companions/chapter_04_a.png", "res://assets/companions/chapter_04_b.png"], "gallery_path": "res://assets/gallery/chapter_04.png", "color": Color("9d83d7"), "reward": "Звёздный сад"},

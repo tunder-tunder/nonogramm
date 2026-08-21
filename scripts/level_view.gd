@@ -22,7 +22,9 @@ var _debug_enabled := OS.is_debug_build()
 
 @onready var row_hints_container: VBoxContainer = $RowHintsContainer
 @onready var col_hints_container: HBoxContainer = $ColHintsContainer
-@onready var main_grid_container: GridContainer = $MainGridContainer
+@onready var main_grid_container: CenterContainer = $MainGridContainer
+@onready var background: ColorRect = $Background
+@onready var info_banner: Panel = $InfoBanner
 @onready var level_label: Label = $LevelLabel
 @onready var check_button: Button = $CheckButton
 @onready var back_button: Button = $BackButton
@@ -48,7 +50,15 @@ const COLOR_GRID_GROUP = Color("c9d0da")
 const COLOR_GRID_MAJOR_GROUP = Color("202733")
 const COLOR_HINT = Color("26364d")
 const COLOR_HINT_SOLVED = Color("8b96a6")
-const LARGE_GRID_TOTAL_SIZE := 460
+const GRID_TOTAL_SIZE := 500
+
+var active_filled_color := COLOR_FILLED
+var active_cross_color := COLOR_CROSS
+var active_grid_border_color := COLOR_GRID_BORDER
+var active_grid_group_color := COLOR_GRID_GROUP
+var active_grid_major_color := COLOR_GRID_MAJOR_GROUP
+var active_hint_color := COLOR_HINT
+var active_hint_solved_color := COLOR_HINT_SOLVED
 
 func _ready():
 	back_button.connect("pressed", _on_back_pressed)
@@ -81,9 +91,10 @@ func configure(data: LevelData, save_data: SaveData) -> void:
 
 func set_level_data(data: LevelData):
 	level_data = data
+	_apply_chapter_palette(data.chapter_index)
 	level_label.text = "%s  ·  %d×%d" % [data.level_name, data.grid_size, data.grid_size]
 	var hint_size := _get_hint_area_size(data.grid_size)
-	var cell_budget := 440 if data.grid_size <= 25 else LARGE_GRID_TOTAL_SIZE - hint_size
+	var cell_budget := 440 if data.grid_size <= 15 else GRID_TOTAL_SIZE - hint_size
 	cell_size = clampi(floori(float(cell_budget) / float(data.grid_size)), 8, 60)
 	elapsed_seconds = progress.get_elapsed_time(data) if progress else 0.0
 	autosave_accumulator = 0.0
@@ -107,6 +118,48 @@ func set_level_data(data: LevelData):
 	_load_companion(companion_two_texture, $CompanionLane/CompanionTwo/Placeholder, chapter.companion_paths[1])
 	_create_grid_ui()
 	_log_debug("Loaded %s (%dx%d)" % [data.level_name, data.grid_size, data.grid_size])
+
+func _apply_chapter_palette(chapter_index: int) -> void:
+	active_filled_color = COLOR_FILLED
+	active_cross_color = COLOR_CROSS
+	active_grid_border_color = COLOR_GRID_BORDER
+	active_grid_group_color = COLOR_GRID_GROUP
+	active_grid_major_color = COLOR_GRID_MAJOR_GROUP
+	active_hint_color = COLOR_HINT
+	active_hint_solved_color = COLOR_HINT_SOLVED
+	background.color = Color.WHITE
+	level_label.add_theme_color_override("font_color", COLOR_HINT)
+	if chapter_index != 0:
+		return
+
+	var info: Dictionary = LevelCatalog.CHAPTERS[0]
+	var brown: Color = info.color
+	var pink: Color = info.secondary_color
+	active_filled_color = brown
+	active_cross_color = brown
+	active_grid_border_color = pink.lightened(0.32)
+	active_grid_group_color = pink
+	active_grid_major_color = brown
+	active_hint_color = brown.darkened(0.12)
+	active_hint_solved_color = brown.lightened(0.35)
+	background.color = info.background_color
+	level_label.add_theme_color_override("font_color", brown)
+	info_banner.add_theme_stylebox_override("panel", _make_panel_style(brown, pink))
+	_style_action_button(check_button, brown, pink)
+	_style_action_button(back_button, brown, pink)
+
+func _make_panel_style(background_color: Color, border_color: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = background_color
+	style.border_color = border_color
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(14)
+	return style
+
+func _style_action_button(button: Button, background_color: Color, accent_color: Color) -> void:
+	button.add_theme_stylebox_override("normal", _make_panel_style(background_color, accent_color))
+	button.add_theme_stylebox_override("hover", _make_panel_style(background_color.lightened(0.12), accent_color.lightened(0.08)))
+	button.add_theme_stylebox_override("pressed", _make_panel_style(background_color.darkened(0.1), accent_color))
 
 func _load_companion(target: TextureRect, placeholder: Label, path: String) -> void:
 	if ResourceLoader.exists(path, "Texture2D"):
@@ -196,9 +249,11 @@ func _create_grid_ui():
 	_update_all_hint_states()
 
 func _get_hint_area_size(grid_size: int) -> int:
-	# Compact clue gutters leave enough room for the full 30×30–50×50 board
-	# between the information banner and the action buttons.
-	return 60 if grid_size > 25 else 112
+	if grid_size >= 30:
+		return 60
+	if grid_size >= 25:
+		return 80
+	return 96 if grid_size > 15 else 112
 
 func _create_hint_label(text: String, font_size: int, column_hint: bool) -> Label:
 	var label := Label.new()
@@ -210,7 +265,7 @@ func _create_hint_label(text: String, font_size: int, column_hint: bool) -> Labe
 	# dedicated left gutter without affecting the square board tracks.
 	label.clip_text = column_hint
 	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_color_override("font_color", COLOR_HINT)
+	label.add_theme_color_override("font_color", active_hint_color)
 	return label
 
 func _calculate_row_hints() -> Array:
@@ -313,14 +368,14 @@ func _update_cell_visual(x: int, y: int) -> void:
 	cross_indicator.visible = player_grid[y][x] == 2
 	cross_indicator.text = "✕" if cell_size >= 12 else "·"
 	if player_grid[y][x] == 1:
-		_apply_cell_style(button, COLOR_FILLED)
+		_apply_cell_style(button, active_filled_color)
 	elif player_grid[y][x] == 2:
 		_apply_cell_style(button, COLOR_EMPTY)
 	else:
 		_apply_cell_style(button, COLOR_EMPTY)
 
 func _apply_cell_style(button: Button, fill_color: Color):
-	var state := 1 if fill_color == COLOR_FILLED else 0
+	var state := 1 if fill_color == active_filled_color else 0
 	var normal_key := "normal:%d" % state
 	var hover_key := "hover:%d" % state
 	if not cell_style_cache.has(normal_key):
@@ -339,7 +394,7 @@ func _create_cross_indicator() -> Label:
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.clip_text = true
-	label.add_theme_color_override("font_color", COLOR_CROSS)
+	label.add_theme_color_override("font_color", active_cross_color)
 	label.add_theme_font_size_override("font_size", clampi(cell_size - 1, 7, 18))
 	label.visible = false
 	return label
@@ -347,7 +402,7 @@ func _create_cross_indicator() -> Label:
 func _create_cell_style(fill_color: Color) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = fill_color
-	style.border_color = COLOR_GRID_BORDER
+	style.border_color = active_grid_border_color
 	style.set_border_width_all(1)
 	return style
 
@@ -375,7 +430,7 @@ func _get_group_strength(edge: int) -> int:
 func _create_separator(vertical: bool, strength: int) -> ColorRect:
 	var separator := ColorRect.new()
 	var thickness := 3 if strength == 2 else 2
-	separator.color = COLOR_GRID_MAJOR_GROUP if strength == 2 else COLOR_GRID_GROUP
+	separator.color = active_grid_major_color if strength == 2 else active_grid_group_color
 	separator.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if vertical:
 		separator.anchor_left = 1.0
@@ -399,7 +454,7 @@ func _update_all_hint_states() -> void:
 		_update_column_hint_states(index)
 
 func _set_hint_solved(label: Label, solved: bool) -> void:
-	label.add_theme_color_override("font_color", COLOR_HINT_SOLVED if solved else COLOR_HINT)
+	label.add_theme_color_override("font_color", active_hint_solved_color if solved else active_hint_color)
 	label.modulate.a = 0.72 if solved else 1.0
 
 func _update_row_hint_states(row: int) -> void:
