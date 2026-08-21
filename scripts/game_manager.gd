@@ -72,6 +72,8 @@ func load_level(level_data: Resource):
 		level_scene.connect("level_select_pressed", load_level_select)
 	if level_scene.has_signal("next_level_pressed"):
 		level_scene.connect("next_level_pressed", _on_next_level_pressed)
+	if level_scene.has_signal("gallery_pressed"):
+		level_scene.connect("gallery_pressed", load_gallery_menu)
 
 func _on_level_completed(elapsed_seconds: float):
 	progress.mark_completed(active_level, elapsed_seconds)
