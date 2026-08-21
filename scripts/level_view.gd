@@ -309,12 +309,16 @@ func _add_group_separators(button: Button, x: int, y: int) -> void:
 		button.add_child(_create_separator(false, bottom_group))
 
 func _get_group_strength(edge: int) -> int:
+	# A bold 10-cell division is only useful when the whole board can be
+	# split into equal 10-cell areas. On 15×15, 25×25, etc. it would create
+	# an asymmetric layout, so all 5×5 areas use the same subtle separator.
+	var has_even_ten_cell_groups := level_data.grid_size % 10 == 0
 	if edge % 10 == 0:
-		return 2
+		return 2 if has_even_ten_cell_groups else 1
 	if edge % 5 == 0:
-		# On 10×10 boards each 5×5 block is a major area. On larger
-		# boards 5×5 areas stay subtle and 10×10 areas are emphasized.
-		return 2 if level_data.grid_size <= 10 else 1
+		# A 10×10 board is split into four equal 5×5 areas by a bold center
+		# line. Larger boards keep intermediate 5-cell divisions subtle.
+		return 2 if level_data.grid_size == 10 else 1
 	return 0
 
 func _create_separator(vertical: bool, strength: int) -> ColorRect:
