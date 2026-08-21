@@ -4,6 +4,7 @@ signal level_completed(elapsed_seconds: float)
 signal back_to_menu_pressed()
 signal next_level_pressed(current_level: LevelData)
 signal level_select_pressed()
+signal gallery_pressed()
 
 var level_data: LevelData
 var progress: SaveData
@@ -28,6 +29,7 @@ var _debug_enabled := OS.is_debug_build()
 @onready var victory_banner: Panel = $VictoryBanner
 @onready var victory_level_select_button: Button = $VictoryBanner/VictoryActions/LevelSelectButton
 @onready var victory_next_button: Button = $VictoryBanner/VictoryActions/NextLevelButton
+@onready var victory_gallery_button: Button = $VictoryBanner/VictoryActions/GalleryButton
 @onready var debug_label: Label = $DebugLabel
 @onready var companion_one: Control = $CompanionLane/CompanionOne
 @onready var companion_two: Control = $CompanionLane/CompanionTwo
@@ -41,14 +43,20 @@ var companion_time := 0.0
 const COLOR_FILLED = Color(0.12, 0.38, 0.85)       # Синий для ЛКМ
 const COLOR_EMPTY = Color.WHITE                    # Белая нейтральная клетка
 const COLOR_CROSS = Color(0.12, 0.38, 0.85)        # Синий крестик для ПКМ
-const COLOR_GRID_BORDER = Color(0.12, 0.38, 0.85)
+const COLOR_GRID_BORDER = Color("dfe4eb")
+const COLOR_GRID_GROUP = Color("c9d0da")
+const COLOR_GRID_MAJOR_GROUP = Color("202733")
+const COLOR_HINT = Color("26364d")
+const COLOR_HINT_SOLVED = Color("8b96a6")
 
 func _ready():
 	back_button.connect("pressed", _on_back_pressed)
 	check_button.connect("pressed", _on_check_pressed)
 	victory_level_select_button.connect("pressed", _on_level_select_pressed)
 	victory_next_button.connect("pressed", _on_next_level_pressed)
+	victory_gallery_button.connect("pressed", _on_gallery_pressed)
 	victory_banner.visible = false
+	victory_gallery_button.visible = false
 	debug_label.visible = _debug_enabled
 	_log_debug("Level view ready")
 
@@ -124,7 +132,7 @@ func _create_grid_ui():
 	cell_style_cache.clear()
 	row_hint_labels = []
 	col_hint_labels = []
-	var hint_size := 76
+	var hint_size := 112
 	var hint_font_size := clampi(cell_size - 1, 7, 16)
 
 	var corner = Control.new()
@@ -167,6 +175,7 @@ func _create_grid_ui():
 			button.set_meta("cell_x", x)
 			button.set_meta("cell_y", y)
 			button.connect("gui_input", _on_cell_gui_input.bind(x, y))
+			_add_group_separators(button, x, y)
 			grid_container.add_child(button)
 			button_row.append(button)
 		cell_buttons.append(button_row)
@@ -180,9 +189,10 @@ func _create_hint_label(text: String, font_size: int, column_hint: bool) -> Labe
 	label.text = text
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER if column_hint else HORIZONTAL_ALIGNMENT_RIGHT
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.custom_minimum_size = Vector2(cell_size if column_hint else 0, font_size + 1 if column_hint else cell_size)
-	label.clip_text = true
+	label.custom_minimum_size = Vector2(cell_size if column_hint else maxi(font_size + 6, 18), font_size + 1 if column_hint else cell_size)
+	label.clip_text = false
 	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", COLOR_HINT)
 	return label
 
 func _calculate_row_hints() -> Array:
@@ -267,33 +277,62 @@ func _update_cell_visual(x: int, y: int) -> void:
 	button.add_theme_color_override("font_pressed_color", COLOR_CROSS)
 	button.add_theme_font_size_override("font_size", clampi(cell_size - 1, 7, 18))
 	if player_grid[y][x] == 1:
-		_apply_cell_style(button, COLOR_FILLED, x, y)
+		_apply_cell_style(button, COLOR_FILLED)
 	elif player_grid[y][x] == 2:
-		_apply_cell_style(button, COLOR_EMPTY, x, y)
+		_apply_cell_style(button, COLOR_EMPTY)
 		button.text = "✕" if cell_size >= 12 else "·"
 	else:
-		_apply_cell_style(button, COLOR_EMPTY, x, y)
+		_apply_cell_style(button, COLOR_EMPTY)
 
-func _apply_cell_style(button: Button, fill_color: Color, x: int, y: int):
-	var right_group := 2 if (x + 1) % 10 == 0 else (1 if (x + 1) % 5 == 0 else 0)
-	var bottom_group := 2 if (y + 1) % 10 == 0 else (1 if (y + 1) % 5 == 0 else 0)
-	var key := "%d:%d:%d" % [1 if fill_color == COLOR_FILLED else 0, right_group, bottom_group]
+func _apply_cell_style(button: Button, fill_color: Color):
+	var key := 1 if fill_color == COLOR_FILLED else 0
 	if not cell_style_cache.has(key):
-		cell_style_cache[key] = _create_cell_style(fill_color, right_group, bottom_group)
+		cell_style_cache[key] = _create_cell_style(fill_color)
 	var style: StyleBoxFlat = cell_style_cache[key]
 	button.add_theme_stylebox_override("normal", style)
 	button.add_theme_stylebox_override("hover", style)
 	button.add_theme_stylebox_override("pressed", style)
 
-func _create_cell_style(fill_color: Color, right_group: int, bottom_group: int) -> StyleBoxFlat:
+func _create_cell_style(fill_color: Color) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = fill_color
-	style.border_color = Color("506078") if right_group == 2 or bottom_group == 2 else (Color("9aa6b8") if right_group == 1 or bottom_group == 1 else COLOR_GRID_BORDER)
-	style.border_width_left = 1
-	style.border_width_top = 1
-	style.border_width_right = 3 if right_group == 2 else (2 if right_group == 1 else 1)
-	style.border_width_bottom = 3 if bottom_group == 2 else (2 if bottom_group == 1 else 1)
+	style.border_color = COLOR_GRID_BORDER
+	style.set_border_width_all(1)
 	return style
+
+func _add_group_separators(button: Button, x: int, y: int) -> void:
+	var right_group := _get_group_strength(x + 1)
+	var bottom_group := _get_group_strength(y + 1)
+	if right_group > 0:
+		button.add_child(_create_separator(true, right_group))
+	if bottom_group > 0:
+		button.add_child(_create_separator(false, bottom_group))
+
+func _get_group_strength(edge: int) -> int:
+	if edge % 10 == 0:
+		return 2
+	if edge % 5 == 0:
+		# On 10×10 boards each 5×5 block is a major area. On larger
+		# boards 5×5 areas stay subtle and 10×10 areas are emphasized.
+		return 2 if level_data.grid_size <= 10 else 1
+	return 0
+
+func _create_separator(vertical: bool, strength: int) -> ColorRect:
+	var separator := ColorRect.new()
+	var thickness := 3 if strength == 2 else 2
+	separator.color = COLOR_GRID_MAJOR_GROUP if strength == 2 else COLOR_GRID_GROUP
+	separator.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if vertical:
+		separator.anchor_left = 1.0
+		separator.anchor_right = 1.0
+		separator.anchor_bottom = 1.0
+		separator.offset_left = -thickness
+	else:
+		separator.anchor_right = 1.0
+		separator.anchor_top = 1.0
+		separator.anchor_bottom = 1.0
+		separator.offset_top = -thickness
+	return separator
 
 func _update_hint_states(row: int, column: int) -> void:
 	_update_row_hint_states(row)
@@ -305,7 +344,7 @@ func _update_all_hint_states() -> void:
 		_update_column_hint_states(index)
 
 func _set_hint_solved(label: Label, solved: bool) -> void:
-	label.add_theme_color_override("font_color", Color("8893a6") if solved else Color.WHITE)
+	label.add_theme_color_override("font_color", COLOR_HINT_SOLVED if solved else COLOR_HINT)
 	label.modulate.a = 0.72 if solved else 1.0
 
 func _update_row_hint_states(row: int) -> void:
@@ -371,6 +410,12 @@ func _check_solution():
 		level_label.text = "Победа! Уровень пройден!"
 		victory_message.text = "🎉 Поздравляем! 🎉\nВы решили поле %d×%d за %s" % [level_data.grid_size, level_data.grid_size, SaveData.format_time(elapsed_seconds)]
 		level_completed.emit(elapsed_seconds)
+		var chapter_completed := level_data.level_index == LevelCatalog.LEVELS_PER_CHAPTER - 1
+		victory_gallery_button.visible = chapter_completed
+		if chapter_completed:
+			var chapter: Dictionary = LevelCatalog.CHAPTERS[level_data.chapter_index]
+			victory_message.text = "🏆 Глава пройдена! 🏆\nОткрыта иллюстрация «%s».\nПосмотрите её в галерее." % chapter.reward
+			victory_next_button.text = "Следующая глава" if level_data.chapter_index < LevelCatalog.CHAPTERS.size() - 1 else "Выбор уровней"
 		check_button.disabled = true
 		victory_banner.visible = true
 		_log_debug("Level completed: %s" % level_data.level_name)
@@ -387,6 +432,9 @@ func _on_level_select_pressed():
 
 func _on_next_level_pressed():
 	next_level_pressed.emit(level_data)
+
+func _on_gallery_pressed():
+	gallery_pressed.emit()
 
 func _validate_level_data():
 	if not level_data:
