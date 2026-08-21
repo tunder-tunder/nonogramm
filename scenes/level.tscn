@@ -71,7 +71,7 @@ theme_override_font_sizes/font_size = 14
 [node name="Legend" type="Label" parent="InfoBanner/InfoRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "ЛКМ — клетка  ·  ПКМ — крестик  ·  Shift + ЛКМ — заполнить/очистить строку"
+text = "ЛКМ/ПКМ — клетка  ·  Shift — строка  ·  Ctrl — столбец"
 horizontal_alignment = 1
 vertical_alignment = 1
 theme_override_colors/font_color = Color(0.75, 0.8, 0.9, 1)

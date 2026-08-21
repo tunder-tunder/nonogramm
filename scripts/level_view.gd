@@ -84,7 +84,7 @@ func set_level_data(data: LevelData):
 	level_label.text = "%s  ·  %d×%d" % [data.level_name, data.grid_size, data.grid_size]
 	var hint_size := _get_hint_area_size(data.grid_size)
 	var cell_budget := 440 if data.grid_size <= 25 else LARGE_GRID_TOTAL_SIZE - hint_size
-	cell_size = clampi(floori(float(cell_budget) / float(data.grid_size)), 6, 60)
+	cell_size = clampi(floori(float(cell_budget) / float(data.grid_size)), 8, 60)
 	elapsed_seconds = progress.get_elapsed_time(data) if progress else 0.0
 	autosave_accumulator = 0.0
 	level_running = not (progress and progress.is_completed(data.chapter_index, data.level_index))
@@ -128,6 +128,8 @@ func _create_grid_ui():
 
 	grid_container = GridContainer.new()
 	grid_container.columns = level_data.grid_size + 1
+	grid_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	grid_container.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	grid_container.add_theme_constant_override("h_separation", 0)
 	grid_container.add_theme_constant_override("v_separation", 0)
 	cell_buttons = []
@@ -135,7 +137,9 @@ func _create_grid_ui():
 	row_hint_labels = []
 	col_hint_labels = []
 	var hint_size := _get_hint_area_size(level_data.grid_size)
-	var hint_font_size := clampi(cell_size - 1, 7, 16)
+	var hint_font_size := clampi(cell_size - 2, 6, 16)
+	var grid_side := hint_size + cell_size * level_data.grid_size
+	grid_container.custom_minimum_size = Vector2(grid_side, grid_side)
 
 	var corner = Control.new()
 	corner.custom_minimum_size = Vector2(hint_size, hint_size)
@@ -172,6 +176,8 @@ func _create_grid_ui():
 		for x in range(level_data.grid_size):
 			var button := Button.new()
 			button.custom_minimum_size = Vector2(cell_size, cell_size)
+			button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+			button.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 			button.name = "Cell_%d_%d" % [x, y]
 			button.focus_mode = Control.FOCUS_NONE
 			button.set_meta("cell_x", x)
@@ -189,7 +195,7 @@ func _create_grid_ui():
 func _get_hint_area_size(grid_size: int) -> int:
 	# Compact clue gutters leave enough room for the full 30×30–50×50 board
 	# between the information banner and the action buttons.
-	return 80 if grid_size > 25 else 112
+	return 60 if grid_size > 25 else 112
 
 func _create_hint_label(text: String, font_size: int, column_hint: bool) -> Label:
 	var label := Label.new()
@@ -240,19 +246,20 @@ func _calculate_col_hints() -> Array:
 
 func _on_cell_gui_input(event: InputEvent, x: int, y: int):
 	if event is InputEventMouseButton and event.pressed:
-		get_viewport().set_input_as_handled()
-		var row_action: bool = event.button_index == MOUSE_BUTTON_LEFT and bool(event.shift_pressed)
-		if row_action:
-			_toggle_full_row(y)
-		elif event.button_index == MOUSE_BUTTON_LEFT:
-			player_grid[y][x] = 0 if player_grid[y][x] == 1 else 1
-		elif event.button_index == MOUSE_BUTTON_RIGHT:
-			player_grid[y][x] = 0 if player_grid[y][x] == 2 else 2
-		else:
+		if event.button_index != MOUSE_BUTTON_LEFT and event.button_index != MOUSE_BUTTON_RIGHT:
 			return
-		if not row_action:
+		get_viewport().set_input_as_handled()
+		var new_mark := 1 if event.button_index == MOUSE_BUTTON_LEFT else 2
+		var bulk_action := bool(event.shift_pressed) or bool(event.ctrl_pressed)
+		if event.shift_pressed:
+			_toggle_full_row(y, new_mark)
+		elif event.ctrl_pressed:
+			_toggle_full_column(x, new_mark)
+		else:
+			player_grid[y][x] = 0 if player_grid[y][x] == new_mark else new_mark
 			_update_cell_visual(x, y)
-		_update_hint_states(y, x)
+		if not bulk_action:
+			_update_hint_states(y, x)
 		if progress:
 			progress.save_draft(level_data, player_grid, elapsed_seconds)
 		_log_debug("Cell (%d,%d) -> %d" % [x, y, player_grid[y][x]])
@@ -262,14 +269,26 @@ func _update_grid_visuals():
 		for x in range(level_data.grid_size):
 			_update_cell_visual(x, y)
 
-func _toggle_full_row(y: int) -> void:
-	var all_filled := true
+func _toggle_full_row(y: int, mark: int) -> void:
+	var all_marked := true
 	for x in range(level_data.grid_size):
-		if player_grid[y][x] != 1:
-			all_filled = false
+		if player_grid[y][x] != mark:
+			all_marked = false
 			break
-	var new_value := 0 if all_filled else 1
+	var new_value := 0 if all_marked else mark
 	for x in range(level_data.grid_size):
+		player_grid[y][x] = new_value
+		_update_cell_visual(x, y)
+	_update_all_hint_states()
+
+func _toggle_full_column(x: int, mark: int) -> void:
+	var all_marked := true
+	for y in range(level_data.grid_size):
+		if player_grid[y][x] != mark:
+			all_marked = false
+			break
+	var new_value := 0 if all_marked else mark
+	for y in range(level_data.grid_size):
 		player_grid[y][x] = new_value
 		_update_cell_visual(x, y)
 	_update_all_hint_states()
