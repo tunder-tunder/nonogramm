@@ -3,6 +3,13 @@ class_name LevelCatalog
 
 const LEVELS_PER_CHAPTER := 10
 const LEVEL_TEMPLATE_PATH := "res://levels/solutions/level_%02d.txt"
+const LEVEL_SIZES := [
+	[5, 5, 5, 5, 5, 10, 10, 10, 10, 10],
+	[10, 10, 10, 10, 10, 15, 15, 15, 15, 15],
+	[15, 15, 15, 15, 15, 20, 20, 20, 20, 20],
+	[20, 20, 20, 20, 20, 25, 25, 25, 25, 25],
+	[25, 25, 30, 30, 30, 30, 30, 30, 30, 30]
+]
 
 const CHAPTERS := [
 	{"title": "Лес светлячков", "subtitle": "Тихие тропы", "icon": "🌿", "companion_names": "Лесные друзья", "companion_paths": ["res://assets/companions/chapter_01_a.png", "res://assets/companions/chapter_01_b.png"], "gallery_path": "res://assets/gallery/chapter_01.png", "color": Color("75b798"), "reward": "Ночной пикник"},
@@ -28,9 +35,9 @@ static func create_levels() -> Array[LevelData]:
 	return result
 
 static func _get_grid_size(global_index: int) -> int:
-	# Levels 1–5 are 5×5. Every following group of five grows by 5,
-	# so each chapter advances through two clearly defined grid sizes.
-	return 5 + ceili(float(maxi(global_index - 4, 0)) / 5.0) * 5
+	var chapter := floori(float(global_index) / float(LEVELS_PER_CHAPTER))
+	var level := global_index % LEVELS_PER_CHAPTER
+	return LEVEL_SIZES[chapter][level]
 
 static func _load_solution(global_index: int, size: int) -> Array:
 	var path := LEVEL_TEMPLATE_PATH % (global_index + 1)
