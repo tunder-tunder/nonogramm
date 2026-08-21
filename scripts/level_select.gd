@@ -15,6 +15,7 @@ var selected_chapter := 0
 @onready var progress_label: Label = $Margin/Page/ChapterHeader/HeaderMargin/HeaderRow/Progress
 @onready var level_grid: GridContainer = $Margin/Page/LevelGrid
 @onready var continue_button: Button = $Margin/Page/Footer/ContinueButton
+@onready var background: ColorRect = $Background
 
 func configure(all_levels: Array[LevelData], save_data: SaveData) -> void:
 	levels = all_levels
@@ -53,12 +54,15 @@ func _show_chapter(chapter: int) -> void:
 	selected_chapter = chapter
 	var info: Dictionary = LevelCatalog.CHAPTERS[chapter]
 	chapter_title.text = "ГЛАВА %d · %s" % [chapter + 1, info.title]
-	chapter_subtitle.text = "%s  •  %s" % [info.subtitle, info.companion_names]
+	chapter_subtitle.text = "%s  •  выберите уровень" % info.subtitle
 	chapter_icon.text = info.icon
-	chapter_header.add_theme_stylebox_override("panel", _make_style(info.color.darkened(0.35), info.color.lightened(0.12), 2, 18))
+	var secondary: Color = info.get("secondary_color", info.color.lightened(0.28))
+	background.color = info.get("background_color", Color("ecf0f8"))
+	chapter_header.add_theme_stylebox_override("panel", _make_style(info.color, secondary, 2, 18))
 	_style_chapter_tabs()
 	var completed := progress.completed_in_chapter(chapter)
-	progress_label.text = "%d / 10\nЗАВЕРШЕНО" % completed
+	progress_label.text = "%d / 10" % completed
+	progress_label.add_theme_color_override("font_color", secondary.lightened(0.18))
 	continue_button.text = "Продолжить · уровень %d" % [progress.last_level + 1] if chapter == progress.last_chapter else "Играть главу"
 	_rebuild_levels()
 
@@ -73,15 +77,16 @@ func _create_level_card(level_index: int) -> Control:
 	var unlocked := progress.is_level_unlocked(selected_chapter, level_index)
 	var completed := progress.is_completed(selected_chapter, level_index)
 	var button := Button.new()
-	button.custom_minimum_size = Vector2(190, 170)
+	button.custom_minimum_size = Vector2(190, 180)
 	button.disabled = not unlocked
 	button.tooltip_text = "Продолжить уровень %d" % (level_index + 1) if unlocked else "Сначала пройдите предыдущий уровень"
 	button.pressed.connect(_select_level.bind(level_index))
 	var chapter_color: Color = LevelCatalog.CHAPTERS[selected_chapter].color
-	var card_color := Color("ffffff") if unlocked else Color("e7eaf0")
-	button.add_theme_stylebox_override("normal", _make_style(card_color, chapter_color.lightened(0.35), 2, 16))
-	button.add_theme_stylebox_override("hover", _make_style(Color("f7faff"), chapter_color, 3, 16))
-	button.add_theme_stylebox_override("pressed", _make_style(Color("edf3ff"), chapter_color.darkened(0.12), 3, 16))
+	var secondary: Color = LevelCatalog.CHAPTERS[selected_chapter].get("secondary_color", chapter_color.lightened(0.35))
+	var card_color := (Color("fff8fc") if selected_chapter == 0 else Color("ffffff")) if unlocked else Color("e7eaf0")
+	button.add_theme_stylebox_override("normal", _make_style(card_color, secondary, 2, 16))
+	button.add_theme_stylebox_override("hover", _make_style(secondary.lightened(0.42), chapter_color, 3, 16))
+	button.add_theme_stylebox_override("pressed", _make_style(secondary.lightened(0.32), chapter_color.darkened(0.12), 3, 16))
 	button.add_theme_stylebox_override("disabled", _make_style(Color("e7eaf0"), Color("cdd3de"), 1, 16))
 
 	var content := VBoxContainer.new()
@@ -95,13 +100,13 @@ func _create_level_card(level_index: int) -> Control:
 	number.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	number.text = "УРОВЕНЬ %02d  ·  %d×%d" % [level_index + 1, data.grid_size, data.grid_size]
 	number.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	number.add_theme_color_override("font_color", Color("24314d") if unlocked else Color("8791a5"))
-	number.add_theme_font_size_override("font_size", 16)
+	number.add_theme_color_override("font_color", chapter_color.darkened(0.12) if unlocked else Color("8791a5"))
+	number.add_theme_font_size_override("font_size", 18)
 	content.add_child(number)
 
 	var preview := LevelPreview.new()
 	preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	preview.custom_minimum_size = Vector2(94, 94)
+	preview.custom_minimum_size = Vector2(104, 104)
 	preview.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	var draft := progress.get_draft(data)
 	var preview_grid := data.solution if completed else draft
@@ -114,6 +119,7 @@ func _create_level_card(level_index: int) -> Control:
 	var completion_time := progress.get_completion_time(data)
 	status.text = ("✓ ПРОЙДЕН · %s" % SaveData.format_time(completion_time) if completion_time > 0.0 else "✓ ПРОЙДЕН") if completed else ("ДОСТУПЕН" if unlocked else "🔒 ЗАКРЫТ")
 	status.add_theme_color_override("font_color", Color("318463") if completed else (Color("53627b") if unlocked else Color("8791a5")))
+	status.add_theme_font_size_override("font_size", 14)
 	content.add_child(status)
 	return button
 

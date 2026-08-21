@@ -37,6 +37,7 @@ theme_override_constants/separation = 10
 
 [node name="Eyebrow" type="Label" parent="Margin/Page"]
 layout_mode = 2
+visible = false
 text = "ВАШЕ ПУТЕШЕСТВИЕ"
 theme_override_colors/font_color = Color(0.32, 0.38, 0.5, 1)
 theme_override_font_sizes/font_size = 14
@@ -51,7 +52,7 @@ layout_mode = 2
 size_flags_horizontal = 3
 [node name="Title" type="Label" parent="Margin/Page/TopBar"]
 layout_mode = 2
-text = "КАРТА ПУТЕШЕСТВИЯ"
+text = "ВЫБЕРИТЕ УРОВЕНЬ"
 theme_override_colors/font_color = Color(0.075, 0.11, 0.2, 1)
 theme_override_font_sizes/font_size = 26
 
@@ -61,7 +62,7 @@ theme_override_constants/separation = 10
 
 [node name="ChapterHeader" type="PanelContainer" parent="Margin/Page"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 90)
+custom_minimum_size = Vector2(0, 70)
 
 [node name="HeaderMargin" type="MarginContainer" parent="Margin/Page/ChapterHeader"]
 layout_mode = 2
@@ -91,9 +92,10 @@ theme_override_font_sizes/font_size = 24
 layout_mode = 2
 [node name="Progress" type="Label" parent="Margin/Page/ChapterHeader/HeaderMargin/HeaderRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(140, 0)
+custom_minimum_size = Vector2(80, 0)
 horizontal_alignment = 1
 vertical_alignment = 1
+theme_override_font_sizes/font_size = 12
 
 [node name="LevelGrid" type="GridContainer" parent="Margin/Page"]
 layout_mode = 2
