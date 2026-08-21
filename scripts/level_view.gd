@@ -4,7 +4,6 @@ signal level_completed(elapsed_seconds: float)
 signal back_to_menu_pressed()
 signal next_level_pressed(current_level: LevelData)
 signal level_select_pressed()
-signal gallery_pressed()
 
 var level_data: LevelData
 var progress: SaveData
@@ -29,7 +28,6 @@ var _debug_enabled := OS.is_debug_build()
 @onready var victory_banner: Panel = $VictoryBanner
 @onready var victory_level_select_button: Button = $VictoryBanner/VictoryActions/LevelSelectButton
 @onready var victory_next_button: Button = $VictoryBanner/VictoryActions/NextLevelButton
-@onready var victory_gallery_button: Button = $VictoryBanner/VictoryActions/GalleryButton
 @onready var debug_label: Label = $DebugLabel
 @onready var companion_one: Control = $CompanionLane/CompanionOne
 @onready var companion_two: Control = $CompanionLane/CompanionTwo
@@ -43,30 +41,23 @@ var companion_time := 0.0
 const COLOR_FILLED = Color(0.12, 0.38, 0.85)       # Синий для ЛКМ
 const COLOR_EMPTY = Color.WHITE                    # Белая нейтральная клетка
 const COLOR_CROSS = Color(0.12, 0.38, 0.85)        # Синий крестик для ПКМ
-const COLOR_GRID_BORDER = Color("dfe4eb")
-const COLOR_GRID_GROUP = Color("c9d0da")
-const COLOR_GRID_MAJOR_GROUP = Color("202733")
-const COLOR_HINT = Color("26364d")
-const COLOR_HINT_SOLVED = Color("8b96a6")
-const LARGE_GRID_TOTAL_SIZE := 460
+const COLOR_GRID_BORDER = Color(0.12, 0.38, 0.85)
 
 func _ready():
 	back_button.connect("pressed", _on_back_pressed)
 	check_button.connect("pressed", _on_check_pressed)
 	victory_level_select_button.connect("pressed", _on_level_select_pressed)
 	victory_next_button.connect("pressed", _on_next_level_pressed)
-	victory_gallery_button.connect("pressed", _on_gallery_pressed)
 	victory_banner.visible = false
-	victory_gallery_button.visible = false
 	debug_label.visible = _debug_enabled
 	_log_debug("Level view ready")
 
 func _process(delta: float) -> void:
 	companion_time += delta
-	var lane_height := maxf($CompanionLane.size.y - 54.0, 1.0)
-	var companion_x := maxf(($CompanionLane.size.x - 54.0) * 0.5, 0.0)
-	companion_one.position = Vector2(companion_x, fmod(companion_time * 42.0, lane_height))
-	companion_two.position = Vector2(companion_x, lane_height - fmod(companion_time * 32.0, lane_height))
+	companion_one.position.x = fmod(companion_time * 48.0, maxf(size.x - 90.0, 1.0))
+	companion_two.position.x = fmod(companion_time * 35.0 + size.x * 0.45, maxf(size.x - 90.0, 1.0))
+	companion_one.position.y = 7.0 + absf(sin(companion_time * 4.2)) * -10.0
+	companion_two.position.y = 8.0 + absf(sin(companion_time * 3.5 + 1.0)) * -8.0
 	if level_running:
 		elapsed_seconds += delta
 		autosave_accumulator += delta
@@ -82,9 +73,7 @@ func configure(data: LevelData, save_data: SaveData) -> void:
 func set_level_data(data: LevelData):
 	level_data = data
 	level_label.text = "%s  ·  %d×%d" % [data.level_name, data.grid_size, data.grid_size]
-	var hint_size := _get_hint_area_size(data.grid_size)
-	var cell_budget := 440 if data.grid_size <= 25 else LARGE_GRID_TOTAL_SIZE - hint_size
-	cell_size = clampi(floori(float(cell_budget) / float(data.grid_size)), 8, 60)
+	cell_size = clampi(floori(440.0 / float(data.grid_size)), 8, 60)
 	elapsed_seconds = progress.get_elapsed_time(data) if progress else 0.0
 	autosave_accumulator = 0.0
 	level_running = not (progress and progress.is_completed(data.chapter_index, data.level_index))
@@ -105,6 +94,7 @@ func set_level_data(data: LevelData):
 	var chapter: Dictionary = LevelCatalog.CHAPTERS[data.chapter_index]
 	_load_companion(companion_one_texture, $CompanionLane/CompanionOne/Placeholder, chapter.companion_paths[0])
 	_load_companion(companion_two_texture, $CompanionLane/CompanionTwo/Placeholder, chapter.companion_paths[1])
+	$CompanionLane/ChapterName.text = "%s · компаньоны главы" % chapter.title
 	_create_grid_ui()
 	_log_debug("Loaded %s (%dx%d)" % [data.level_name, data.grid_size, data.grid_size])
 
@@ -128,18 +118,14 @@ func _create_grid_ui():
 
 	grid_container = GridContainer.new()
 	grid_container.columns = level_data.grid_size + 1
-	grid_container.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	grid_container.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	grid_container.add_theme_constant_override("h_separation", 0)
 	grid_container.add_theme_constant_override("v_separation", 0)
 	cell_buttons = []
 	cell_style_cache.clear()
 	row_hint_labels = []
 	col_hint_labels = []
-	var hint_size := _get_hint_area_size(level_data.grid_size)
-	var hint_font_size := clampi(cell_size - 2, 6, 16)
-	var grid_side := hint_size + cell_size * level_data.grid_size
-	grid_container.custom_minimum_size = Vector2(grid_side, grid_side)
+	var hint_size := 76
+	var hint_font_size := clampi(cell_size - 1, 7, 16)
 
 	var corner = Control.new()
 	corner.custom_minimum_size = Vector2(hint_size, hint_size)
@@ -176,17 +162,11 @@ func _create_grid_ui():
 		for x in range(level_data.grid_size):
 			var button := Button.new()
 			button.custom_minimum_size = Vector2(cell_size, cell_size)
-			button.size_flags_horizontal = Control.SIZE_FILL
-			button.size_flags_vertical = Control.SIZE_FILL
 			button.name = "Cell_%d_%d" % [x, y]
 			button.focus_mode = Control.FOCUS_NONE
 			button.set_meta("cell_x", x)
 			button.set_meta("cell_y", y)
 			button.connect("gui_input", _on_cell_gui_input.bind(x, y))
-			_add_group_separators(button, x, y)
-			var cross_indicator := _create_cross_indicator()
-			button.add_child(cross_indicator)
-			button.set_meta("cross_indicator", cross_indicator)
 			grid_container.add_child(button)
 			button_row.append(button)
 		cell_buttons.append(button_row)
@@ -195,22 +175,14 @@ func _create_grid_ui():
 	_update_grid_visuals()
 	_update_all_hint_states()
 
-func _get_hint_area_size(grid_size: int) -> int:
-	# Compact clue gutters leave enough room for the full 30×30–50×50 board
-	# between the information banner and the action buttons.
-	return 60 if grid_size > 25 else 112
-
 func _create_hint_label(text: String, font_size: int, column_hint: bool) -> Label:
 	var label := Label.new()
 	label.text = text
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER if column_hint else HORIZONTAL_ALIGNMENT_RIGHT
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.custom_minimum_size = Vector2(cell_size if column_hint else maxi(font_size + 6, 18), font_size + 1 if column_hint else cell_size)
-	# Column labels must never widen a cell column; row labels may use the
-	# dedicated left gutter without affecting the square board tracks.
-	label.clip_text = column_hint
+	label.custom_minimum_size = Vector2(cell_size if column_hint else 0, font_size + 1 if column_hint else cell_size)
+	label.clip_text = true
 	label.add_theme_font_size_override("font_size", font_size)
-	label.add_theme_color_override("font_color", COLOR_HINT)
 	return label
 
 func _calculate_row_hints() -> Array:
@@ -251,20 +223,19 @@ func _calculate_col_hints() -> Array:
 
 func _on_cell_gui_input(event: InputEvent, x: int, y: int):
 	if event is InputEventMouseButton and event.pressed:
-		if event.button_index != MOUSE_BUTTON_LEFT and event.button_index != MOUSE_BUTTON_RIGHT:
-			return
 		get_viewport().set_input_as_handled()
-		var new_mark := 1 if event.button_index == MOUSE_BUTTON_LEFT else 2
-		var bulk_action := bool(event.shift_pressed) or bool(event.ctrl_pressed)
-		if event.shift_pressed:
-			_toggle_full_row(y, new_mark)
-		elif event.ctrl_pressed:
-			_toggle_full_column(x, new_mark)
+		var row_action: bool = event.button_index == MOUSE_BUTTON_LEFT and bool(event.shift_pressed)
+		if row_action:
+			_toggle_full_row(y)
+		elif event.button_index == MOUSE_BUTTON_LEFT:
+			player_grid[y][x] = 0 if player_grid[y][x] == 1 else 1
+		elif event.button_index == MOUSE_BUTTON_RIGHT:
+			player_grid[y][x] = 0 if player_grid[y][x] == 2 else 2
 		else:
-			player_grid[y][x] = 0 if player_grid[y][x] == new_mark else new_mark
+			return
+		if not row_action:
 			_update_cell_visual(x, y)
-		if not bulk_action:
-			_update_hint_states(y, x)
+		_update_hint_states(y, x)
 		if progress:
 			progress.save_draft(level_data, player_grid, elapsed_seconds)
 		_log_debug("Cell (%d,%d) -> %d" % [x, y, player_grid[y][x]])
@@ -274,26 +245,14 @@ func _update_grid_visuals():
 		for x in range(level_data.grid_size):
 			_update_cell_visual(x, y)
 
-func _toggle_full_row(y: int, mark: int) -> void:
-	var all_marked := true
+func _toggle_full_row(y: int) -> void:
+	var all_filled := true
 	for x in range(level_data.grid_size):
-		if player_grid[y][x] != mark:
-			all_marked = false
+		if player_grid[y][x] != 1:
+			all_filled = false
 			break
-	var new_value := 0 if all_marked else mark
+	var new_value := 0 if all_filled else 1
 	for x in range(level_data.grid_size):
-		player_grid[y][x] = new_value
-		_update_cell_visual(x, y)
-	_update_all_hint_states()
-
-func _toggle_full_column(x: int, mark: int) -> void:
-	var all_marked := true
-	for y in range(level_data.grid_size):
-		if player_grid[y][x] != mark:
-			all_marked = false
-			break
-	var new_value := 0 if all_marked else mark
-	for y in range(level_data.grid_size):
 		player_grid[y][x] = new_value
 		_update_cell_visual(x, y)
 	_update_all_hint_states()
@@ -303,85 +262,38 @@ func _update_cell_visual(x: int, y: int) -> void:
 	if not button:
 		return
 	button.text = ""
-	var cross_indicator: Label = button.get_meta("cross_indicator")
-	cross_indicator.visible = player_grid[y][x] == 2
-	cross_indicator.text = "✕" if cell_size >= 12 else "·"
+	button.add_theme_color_override("font_color", COLOR_CROSS)
+	button.add_theme_color_override("font_hover_color", COLOR_CROSS)
+	button.add_theme_color_override("font_pressed_color", COLOR_CROSS)
+	button.add_theme_font_size_override("font_size", clampi(cell_size - 1, 7, 18))
 	if player_grid[y][x] == 1:
-		_apply_cell_style(button, COLOR_FILLED)
+		_apply_cell_style(button, COLOR_FILLED, x, y)
 	elif player_grid[y][x] == 2:
-		_apply_cell_style(button, COLOR_EMPTY)
+		_apply_cell_style(button, COLOR_EMPTY, x, y)
+		button.text = "✕" if cell_size >= 12 else "·"
 	else:
-		_apply_cell_style(button, COLOR_EMPTY)
+		_apply_cell_style(button, COLOR_EMPTY, x, y)
 
-func _apply_cell_style(button: Button, fill_color: Color):
-	var state := 1 if fill_color == COLOR_FILLED else 0
-	var normal_key := "normal:%d" % state
-	var hover_key := "hover:%d" % state
-	if not cell_style_cache.has(normal_key):
-		cell_style_cache[normal_key] = _create_cell_style(fill_color)
-	if not cell_style_cache.has(hover_key):
-		var hover_color := fill_color.lightened(0.12) if state == 1 else Color("edf4ff")
-		cell_style_cache[hover_key] = _create_cell_style(hover_color)
-	button.add_theme_stylebox_override("normal", cell_style_cache[normal_key])
-	button.add_theme_stylebox_override("hover", cell_style_cache[hover_key])
-	button.add_theme_stylebox_override("pressed", cell_style_cache[hover_key])
+func _apply_cell_style(button: Button, fill_color: Color, x: int, y: int):
+	var right_group := 2 if (x + 1) % 10 == 0 else (1 if (x + 1) % 5 == 0 else 0)
+	var bottom_group := 2 if (y + 1) % 10 == 0 else (1 if (y + 1) % 5 == 0 else 0)
+	var key := "%d:%d:%d" % [1 if fill_color == COLOR_FILLED else 0, right_group, bottom_group]
+	if not cell_style_cache.has(key):
+		cell_style_cache[key] = _create_cell_style(fill_color, right_group, bottom_group)
+	var style: StyleBoxFlat = cell_style_cache[key]
+	button.add_theme_stylebox_override("normal", style)
+	button.add_theme_stylebox_override("hover", style)
+	button.add_theme_stylebox_override("pressed", style)
 
-func _create_cross_indicator() -> Label:
-	var label := Label.new()
-	label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.clip_text = true
-	label.add_theme_color_override("font_color", COLOR_CROSS)
-	label.add_theme_font_size_override("font_size", clampi(cell_size - 1, 7, 18))
-	label.visible = false
-	return label
-
-func _create_cell_style(fill_color: Color) -> StyleBoxFlat:
+func _create_cell_style(fill_color: Color, right_group: int, bottom_group: int) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = fill_color
-	style.border_color = COLOR_GRID_BORDER
-	style.set_border_width_all(1)
+	style.border_color = Color("506078") if right_group == 2 or bottom_group == 2 else (Color("9aa6b8") if right_group == 1 or bottom_group == 1 else COLOR_GRID_BORDER)
+	style.border_width_left = 1
+	style.border_width_top = 1
+	style.border_width_right = 3 if right_group == 2 else (2 if right_group == 1 else 1)
+	style.border_width_bottom = 3 if bottom_group == 2 else (2 if bottom_group == 1 else 1)
 	return style
-
-func _add_group_separators(button: Button, x: int, y: int) -> void:
-	var right_group := _get_group_strength(x + 1)
-	var bottom_group := _get_group_strength(y + 1)
-	if right_group > 0 and x + 1 < level_data.grid_size:
-		button.add_child(_create_separator(true, right_group))
-	if bottom_group > 0 and y + 1 < level_data.grid_size:
-		button.add_child(_create_separator(false, bottom_group))
-
-func _get_group_strength(edge: int) -> int:
-	# A bold 10-cell division is only useful when the whole board can be
-	# split into equal 10-cell areas. On 15×15, 25×25, etc. it would create
-	# an asymmetric layout, so all 5×5 areas use the same subtle separator.
-	var has_even_ten_cell_groups := level_data.grid_size % 10 == 0
-	if edge % 10 == 0:
-		return 2 if has_even_ten_cell_groups else 1
-	if edge % 5 == 0:
-		# A 10×10 board is split into four equal 5×5 areas by a bold center
-		# line. Larger boards keep intermediate 5-cell divisions subtle.
-		return 2 if level_data.grid_size == 10 else 1
-	return 0
-
-func _create_separator(vertical: bool, strength: int) -> ColorRect:
-	var separator := ColorRect.new()
-	var thickness := 3 if strength == 2 else 2
-	separator.color = COLOR_GRID_MAJOR_GROUP if strength == 2 else COLOR_GRID_GROUP
-	separator.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if vertical:
-		separator.anchor_left = 1.0
-		separator.anchor_right = 1.0
-		separator.anchor_bottom = 1.0
-		separator.offset_left = -thickness
-	else:
-		separator.anchor_right = 1.0
-		separator.anchor_top = 1.0
-		separator.anchor_bottom = 1.0
-		separator.offset_top = -thickness
-	return separator
 
 func _update_hint_states(row: int, column: int) -> void:
 	_update_row_hint_states(row)
@@ -393,7 +305,7 @@ func _update_all_hint_states() -> void:
 		_update_column_hint_states(index)
 
 func _set_hint_solved(label: Label, solved: bool) -> void:
-	label.add_theme_color_override("font_color", COLOR_HINT_SOLVED if solved else COLOR_HINT)
+	label.add_theme_color_override("font_color", Color("8893a6") if solved else Color.WHITE)
 	label.modulate.a = 0.72 if solved else 1.0
 
 func _update_row_hint_states(row: int) -> void:
@@ -459,12 +371,6 @@ func _check_solution():
 		level_label.text = "Победа! Уровень пройден!"
 		victory_message.text = "🎉 Поздравляем! 🎉\nВы решили поле %d×%d за %s" % [level_data.grid_size, level_data.grid_size, SaveData.format_time(elapsed_seconds)]
 		level_completed.emit(elapsed_seconds)
-		var chapter_completed := level_data.level_index == LevelCatalog.LEVELS_PER_CHAPTER - 1
-		victory_gallery_button.visible = chapter_completed
-		if chapter_completed:
-			var chapter: Dictionary = LevelCatalog.CHAPTERS[level_data.chapter_index]
-			victory_message.text = "🏆 Глава пройдена! 🏆\nОткрыта иллюстрация «%s».\nПосмотрите её в галерее." % chapter.reward
-			victory_next_button.text = "Следующая глава" if level_data.chapter_index < LevelCatalog.CHAPTERS.size() - 1 else "Выбор уровней"
 		check_button.disabled = true
 		victory_banner.visible = true
 		_log_debug("Level completed: %s" % level_data.level_name)
@@ -481,9 +387,6 @@ func _on_level_select_pressed():
 
 func _on_next_level_pressed():
 	next_level_pressed.emit(level_data)
-
-func _on_gallery_pressed():
-	gallery_pressed.emit()
 
 func _validate_level_data():
 	if not level_data:
