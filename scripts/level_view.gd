@@ -41,7 +41,11 @@ var companion_time := 0.0
 const COLOR_FILLED = Color(0.12, 0.38, 0.85)       # Синий для ЛКМ
 const COLOR_EMPTY = Color.WHITE                    # Белая нейтральная клетка
 const COLOR_CROSS = Color(0.12, 0.38, 0.85)        # Синий крестик для ПКМ
-const COLOR_GRID_BORDER = Color(0.12, 0.38, 0.85)
+const COLOR_GRID_BORDER = Color("dfe4eb")
+const COLOR_GRID_GROUP = Color("c9d0da")
+const COLOR_GRID_MAJOR_GROUP = Color("aeb8c6")
+const COLOR_HINT = Color("26364d")
+const COLOR_HINT_SOLVED = Color("8b96a6")
 
 func _ready():
 	back_button.connect("pressed", _on_back_pressed)
@@ -183,6 +187,7 @@ func _create_hint_label(text: String, font_size: int, column_hint: bool) -> Labe
 	label.custom_minimum_size = Vector2(cell_size if column_hint else 0, font_size + 1 if column_hint else cell_size)
 	label.clip_text = true
 	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", COLOR_HINT)
 	return label
 
 func _calculate_row_hints() -> Array:
@@ -288,7 +293,7 @@ func _apply_cell_style(button: Button, fill_color: Color, x: int, y: int):
 func _create_cell_style(fill_color: Color, right_group: int, bottom_group: int) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = fill_color
-	style.border_color = Color("506078") if right_group == 2 or bottom_group == 2 else (Color("9aa6b8") if right_group == 1 or bottom_group == 1 else COLOR_GRID_BORDER)
+	style.border_color = COLOR_GRID_MAJOR_GROUP if right_group == 2 or bottom_group == 2 else (COLOR_GRID_GROUP if right_group == 1 or bottom_group == 1 else COLOR_GRID_BORDER)
 	style.border_width_left = 1
 	style.border_width_top = 1
 	style.border_width_right = 3 if right_group == 2 else (2 if right_group == 1 else 1)
@@ -305,7 +310,7 @@ func _update_all_hint_states() -> void:
 		_update_column_hint_states(index)
 
 func _set_hint_solved(label: Label, solved: bool) -> void:
-	label.add_theme_color_override("font_color", Color("8893a6") if solved else Color.WHITE)
+	label.add_theme_color_override("font_color", COLOR_HINT_SOLVED if solved else COLOR_HINT)
 	label.modulate.a = 0.72 if solved else 1.0
 
 func _update_row_hint_states(row: int) -> void:
