@@ -39,8 +39,25 @@ var _debug_enabled := OS.is_debug_build()
 @onready var companion_two_texture: TextureRect = $CompanionLane/CompanionTwo/Texture
 @onready var timer_label: Label = $InfoBanner/InfoRow/TimerLabel
 @onready var size_label: Label = $InfoBanner/InfoRow/SizeLabel
+@onready var objective_label: Label = $InfoBanner/InfoRow/Legend
 @onready var victory_message: Label = $VictoryBanner/VictoryMessage
+@onready var help_button: Button = $HelpButton
+@onready var hint_button: Button = $HintButton
+@onready var hint_status: Label = $HintStatus
+@onready var guide_overlay: Control = $GuideOverlay
+@onready var check_status: PanelContainer = $CheckStatus
+@onready var check_status_label: Label = $CheckStatus/Label
+@onready var debug_solve_button: Button = $DebugSolveButton
 var companion_time := 0.0
+var feedback_tween: Tween
+var drag_active := false
+var drag_button := 0
+var drag_value := 0
+var drag_visited: Dictionary = {}
+var hint_tween: Tween
+var hinted_button: Button
+var drag_origin := Vector2i(-1, -1)
+var drag_axis := 0 # 0 — ещё не выбрана, 1 — строка, 2 — столбец
 
 const COLOR_FILLED = Color(0.12, 0.38, 0.85)       # Синий для ЛКМ
 const COLOR_EMPTY = Color.WHITE                    # Белая нейтральная клетка
@@ -66,9 +83,16 @@ func _ready():
 	victory_level_select_button.connect("pressed", _on_level_select_pressed)
 	victory_next_button.connect("pressed", _on_next_level_pressed)
 	victory_gallery_button.connect("pressed", _on_gallery_pressed)
+	help_button.pressed.connect(_show_guide)
+	hint_button.pressed.connect(_show_cell_hint)
+	$GuideOverlay/GuidePanel/CloseButton.pressed.connect(_hide_guide)
+	debug_solve_button.pressed.connect(_debug_solve_level)
 	victory_banner.visible = false
+	guide_overlay.visible = false
+	check_status.visible = false
 	victory_gallery_button.visible = false
 	debug_label.visible = _debug_enabled
+	debug_solve_button.visible = _debug_enabled
 	_log_debug("Level view ready")
 
 func _process(delta: float) -> void:
@@ -94,6 +118,10 @@ func set_level_data(data: LevelData):
 	_apply_chapter_palette(data.chapter_index)
 	level_label.text = "%s  ·  %d×%d" % [data.level_name, data.grid_size, data.grid_size]
 	var hint_size := _get_hint_area_size(data.grid_size)
+	main_grid_container.offset_left = -300.0 - hint_size * 0.5
+	main_grid_container.offset_right = 300.0 - hint_size * 0.5
+	main_grid_container.offset_top = -215.0 - hint_size * 0.5
+	main_grid_container.offset_bottom = 355.0 - hint_size * 0.5
 	var cell_budget := 440 if data.grid_size <= 15 else GRID_TOTAL_SIZE - hint_size
 	cell_size = clampi(floori(float(cell_budget) / float(data.grid_size)), 8, 60)
 	elapsed_seconds = progress.get_elapsed_time(data) if progress else 0.0
@@ -101,6 +129,7 @@ func set_level_data(data: LevelData):
 	level_running = not (progress and progress.is_completed(data.chapter_index, data.level_index))
 	timer_label.text = "ВРЕМЯ  %s" % SaveData.format_time(elapsed_seconds)
 	size_label.text = "ПОЛЕ  %d × %d  ·  %d КЛЕТОК" % [data.grid_size, data.grid_size, data.grid_size * data.grid_size]
+	objective_label.text = data.level_name
 	check_button.disabled = false
 	victory_banner.visible = false
 	_validate_level_data()
@@ -127,26 +156,35 @@ func _apply_chapter_palette(chapter_index: int) -> void:
 	active_grid_major_color = COLOR_GRID_MAJOR_GROUP
 	active_hint_color = COLOR_HINT
 	active_hint_solved_color = COLOR_HINT_SOLVED
-	background.color = Color.WHITE
-	level_label.add_theme_color_override("font_color", COLOR_HINT)
-	if chapter_index != 0:
-		return
-
-	var info: Dictionary = LevelCatalog.CHAPTERS[0]
-	var brown: Color = info.color
-	var pink: Color = info.secondary_color
-	active_filled_color = brown
-	active_cross_color = brown
-	active_grid_border_color = pink.lightened(0.32)
-	active_grid_group_color = pink
-	active_grid_major_color = brown
-	active_hint_color = brown.darkened(0.12)
-	active_hint_solved_color = brown.lightened(0.35)
-	background.color = info.background_color
-	level_label.add_theme_color_override("font_color", brown)
-	info_banner.add_theme_stylebox_override("panel", _make_panel_style(brown, pink))
-	_style_action_button(check_button, brown, pink)
-	_style_action_button(back_button, brown, pink)
+	var info: Dictionary = LevelCatalog.CHAPTERS[chapter_index]
+	var primary: Color = info.color
+	var accent: Color = info.secondary_color
+	active_filled_color = primary
+	active_cross_color = primary
+	active_grid_border_color = accent.lightened(0.32)
+	active_grid_group_color = accent
+	active_grid_major_color = primary
+	active_hint_color = primary.darkened(0.12)
+	active_hint_solved_color = primary.lightened(0.35)
+	background.color = accent.darkened(0.08)
+	level_label.add_theme_color_override("font_color", primary)
+	info_banner.add_theme_stylebox_override("panel", _make_panel_style(Color("fffaf2"), primary))
+	size_label.add_theme_color_override("font_color", primary.darkened(0.18))
+	timer_label.add_theme_color_override("font_color", primary.darkened(0.18))
+	$InfoBanner/InfoRow/Legend.add_theme_color_override("font_color", Color("555b65"))
+	var menu_color := Color("3b1730")
+	var menu_accent := Color("d9789b")
+	_style_action_button(check_button, menu_color, menu_accent)
+	_style_action_button(back_button, menu_color, menu_accent)
+	_style_action_button(help_button, menu_color, menu_accent)
+	_style_action_button(hint_button, menu_color, menu_accent)
+	_style_action_button(debug_solve_button, menu_color, menu_accent)
+	$GuideOverlay/GuidePanel.add_theme_stylebox_override("panel", _make_panel_style(Color("fffdf8"), accent))
+	victory_banner.add_theme_stylebox_override("panel", _make_panel_style(primary.darkened(0.08), accent))
+	victory_message.add_theme_color_override("font_color", Color.WHITE)
+	for button in [victory_level_select_button, victory_next_button, victory_gallery_button]:
+		_style_action_button(button, accent.lightened(0.18), primary)
+		button.add_theme_color_override("font_color", primary.darkened(0.25))
 
 func _make_panel_style(background_color: Color, border_color: Color) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -169,7 +207,7 @@ func _load_companion(target: TextureRect, placeholder: Label, path: String) -> v
 	else:
 		target.texture = null
 		target.visible = false
-		placeholder.visible = true
+		placeholder.visible = false
 
 func _create_grid_ui():
 	for child in main_grid_container.get_children():
@@ -236,6 +274,7 @@ func _create_grid_ui():
 			button.set_meta("cell_x", x)
 			button.set_meta("cell_y", y)
 			button.connect("gui_input", _on_cell_gui_input.bind(x, y))
+			button.mouse_entered.connect(_on_cell_mouse_entered.bind(x, y))
 			_add_group_separators(button, x, y)
 			var cross_indicator := _create_cross_indicator()
 			button.add_child(cross_indicator)
@@ -309,6 +348,7 @@ func _on_cell_gui_input(event: InputEvent, x: int, y: int):
 		if event.button_index != MOUSE_BUTTON_LEFT and event.button_index != MOUSE_BUTTON_RIGHT:
 			return
 		get_viewport().set_input_as_handled()
+		_clear_check_feedback()
 		var new_mark := 1 if event.button_index == MOUSE_BUTTON_LEFT else 2
 		var bulk_action := bool(event.shift_pressed) or bool(event.ctrl_pressed)
 		if event.shift_pressed:
@@ -316,13 +356,49 @@ func _on_cell_gui_input(event: InputEvent, x: int, y: int):
 		elif event.ctrl_pressed:
 			_toggle_full_column(x, new_mark)
 		else:
-			player_grid[y][x] = 0 if player_grid[y][x] == new_mark else new_mark
-			_update_cell_visual(x, y)
+			drag_active = true
+			drag_button = event.button_index
+			drag_value = 0 if player_grid[y][x] == new_mark else new_mark
+			drag_origin = Vector2i(x, y)
+			drag_axis = 0
+			drag_visited.clear()
+			_apply_drag_cell(x, y)
 		if not bulk_action:
 			_update_hint_states(y, x)
 		if progress:
 			progress.save_draft(level_data, player_grid, elapsed_seconds)
 		_log_debug("Cell (%d,%d) -> %d" % [x, y, player_grid[y][x]])
+
+func _input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and not event.pressed and event.button_index == drag_button:
+		if drag_active and progress:
+			progress.save_draft(level_data, player_grid, elapsed_seconds)
+		drag_active = false
+		drag_button = 0
+		drag_origin = Vector2i(-1, -1)
+		drag_axis = 0
+		drag_visited.clear()
+
+func _on_cell_mouse_entered(x: int, y: int) -> void:
+	if not drag_active or not Input.is_mouse_button_pressed(drag_button):
+		return
+	if drag_axis == 0 and Vector2i(x, y) != drag_origin:
+		var delta := Vector2i(x, y) - drag_origin
+		drag_axis = 1 if absi(delta.x) >= absi(delta.y) else 2
+	if drag_axis == 1 and y != drag_origin.y:
+		return
+	if drag_axis == 2 and x != drag_origin.x:
+		return
+	_apply_drag_cell(x, y)
+
+func _apply_drag_cell(x: int, y: int) -> void:
+	var key := Vector2i(x, y)
+	if drag_visited.has(key):
+		return
+	drag_visited[key] = true
+	player_grid[y][x] = drag_value
+	_update_cell_visual(x, y)
+	_update_hint_states(y, x)
 
 func _update_grid_visuals():
 	for y in range(level_data.grid_size):
@@ -375,13 +451,14 @@ func _update_cell_visual(x: int, y: int) -> void:
 		_apply_cell_style(button, COLOR_EMPTY)
 
 func _apply_cell_style(button: Button, fill_color: Color):
-	var state := 1 if fill_color == active_filled_color else 0
-	var normal_key := "normal:%d" % state
-	var hover_key := "hover:%d" % state
+	var is_filled := fill_color == active_filled_color
+	var color_key := fill_color.to_html()
+	var normal_key := "normal:%s" % color_key
+	var hover_key := "hover:%s" % color_key
 	if not cell_style_cache.has(normal_key):
 		cell_style_cache[normal_key] = _create_cell_style(fill_color)
 	if not cell_style_cache.has(hover_key):
-		var hover_color := fill_color.lightened(0.12) if state == 1 else Color("edf4ff")
+		var hover_color := fill_color.lightened(0.12) if is_filled else Color("edf4ff")
 		cell_style_cache[hover_key] = _create_cell_style(hover_color)
 	button.add_theme_stylebox_override("normal", cell_style_cache[normal_key])
 	button.add_theme_stylebox_override("hover", cell_style_cache[hover_key])
@@ -503,6 +580,68 @@ func get_button(x: int, y: int) -> Button:
 func _on_check_pressed():
 	_check_solution()
 
+func _debug_solve_level() -> void:
+	if not _debug_enabled or not level_data or victory_banner.visible:
+		return
+	_clear_cell_hint()
+	for y in range(level_data.grid_size):
+		for x in range(level_data.grid_size):
+			player_grid[y][x] = 1 if int(level_data.solution[y][x]) == 1 else 0
+	_update_grid_visuals()
+	_update_all_hint_states()
+	_check_solution()
+
+func _show_guide() -> void:
+	guide_overlay.visible = true
+	guide_overlay.move_to_front()
+
+func _hide_guide() -> void:
+	guide_overlay.visible = false
+
+func _show_cell_hint() -> void:
+	if not level_data or victory_banner.visible:
+		return
+	_clear_cell_hint()
+	var best := Vector2i(-1, -1)
+	var best_score := -100000
+	for y in range(level_data.grid_size):
+		for x in range(level_data.grid_size):
+			if int(level_data.solution[y][x]) != 1 or player_grid[y][x] == 1:
+				continue
+			var score := _hint_line_score(x, y)
+			if score > best_score:
+				best_score = score
+				best = Vector2i(x, y)
+	if best.x < 0:
+		hint_status.text = "Все нужные клетки уже закрашены"
+		return
+	hinted_button = get_button(best.x, best.y)
+	_apply_cell_style(hinted_button, Color("ffd66b"))
+	hint_status.text = "Подсказка: строка %d, столбец %d" % [best.y + 1, best.x + 1]
+	hint_tween = create_tween()
+	hint_tween.tween_interval(2.5)
+	hint_tween.tween_callback(_clear_cell_hint)
+
+func _hint_line_score(x: int, y: int) -> int:
+	var score := 0
+	for column in range(level_data.grid_size):
+		if player_grid[y][column] == 1:
+			score += 3 if int(level_data.solution[y][column]) == 1 else -5
+	for row in range(level_data.grid_size):
+		if player_grid[row][x] == 1:
+			score += 3 if int(level_data.solution[row][x]) == 1 else -5
+	return score
+
+func _clear_cell_hint() -> void:
+	if hint_tween and hint_tween.is_valid():
+		hint_tween.kill()
+	if hinted_button and is_instance_valid(hinted_button):
+		var x := int(hinted_button.get_meta("cell_x"))
+		var y := int(hinted_button.get_meta("cell_y"))
+		_update_cell_visual(x, y)
+	hinted_button = null
+	hint_status.text = ""
+
 func _check_solution():
 	var is_correct = true
 	for y in range(level_data.grid_size):
@@ -530,7 +669,35 @@ func _check_solution():
 		victory_banner.visible = true
 		_log_debug("Level completed: %s" % level_data.level_name)
 	else:
-		level_label.text = "Неверно, попробуйте еще раз!"
+		_show_check_feedback()
+
+func _show_check_feedback() -> void:
+	var wrong_filled := 0
+	var missing_filled := 0
+	for y in range(level_data.grid_size):
+		for x in range(level_data.grid_size):
+			var expected := int(level_data.solution[y][x])
+			var actual := 1 if player_grid[y][x] == 1 else 0
+			if actual == 1 and expected == 0:
+				wrong_filled += 1
+				_apply_cell_style(get_button(x, y), Color("f3a3a3"))
+			elif actual == 0 and expected == 1:
+				missing_filled += 1
+	check_status_label.text = "Есть ошибки  ·  лишних клеток: %d  ·  пропущено: %d" % [wrong_filled, missing_filled]
+	check_status_label.add_theme_color_override("font_color", Color("7d2131"))
+	check_status.add_theme_stylebox_override("panel", _make_panel_style(Color("ffe8eb"), Color("d65b70")))
+	check_status.visible = true
+	if feedback_tween and feedback_tween.is_valid():
+		feedback_tween.kill()
+	feedback_tween = create_tween()
+	feedback_tween.tween_interval(2.5)
+	feedback_tween.tween_callback(_clear_check_feedback)
+
+func _clear_check_feedback() -> void:
+	if not level_data or victory_banner.visible:
+		return
+	check_status.visible = false
+	_update_grid_visuals()
 
 func _on_back_pressed():
 	if progress and level_data and not progress.is_completed(level_data.chapter_index, level_data.level_index):

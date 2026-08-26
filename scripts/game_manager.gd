@@ -19,7 +19,7 @@ func load_main_menu():
 	add_child(main_menu_scene)
 	current_scene = main_menu_scene
 	if main_menu_scene.has_signal("start_game_pressed"):
-		main_menu_scene.connect("start_game_pressed", load_level_select)
+		main_menu_scene.connect("start_game_pressed", load_chapter_select)
 	if main_menu_scene.has_signal("settings_pressed"):
 		main_menu_scene.connect("settings_pressed", load_settings_menu)
 	if main_menu_scene.has_signal("gallery_pressed"):
@@ -45,16 +45,27 @@ func load_gallery_menu():
 	if gallery_scene.has_signal("back_to_menu_pressed"):
 		gallery_scene.connect("back_to_menu_pressed", load_main_menu)
 
-func load_level_select():
+func load_chapter_select():
+	_clear_current_scene()
+	var chapter_scene = preload("res://scenes/chapter_select.tscn").instantiate()
+	chapter_scene.configure(progress)
+	add_child(chapter_scene)
+	current_scene = chapter_scene
+	chapter_scene.chapter_selected.connect(load_level_select)
+	chapter_scene.back_to_menu_pressed.connect(load_main_menu)
+
+func load_level_select(chapter_index: int = -1):
+	if chapter_index < 0:
+		chapter_index = progress.last_chapter
 	_clear_current_scene()
 	var level_select_scene = preload("res://scenes/level_select.tscn").instantiate()
-	level_select_scene.configure(levels, progress)
+	level_select_scene.configure(levels, progress, chapter_index)
 	add_child(level_select_scene)
 	current_scene = level_select_scene
 	if level_select_scene.has_signal("level_selected"):
 		level_select_scene.connect("level_selected", load_level)
 	if level_select_scene.has_signal("back_to_menu_pressed"):
-		level_select_scene.connect("back_to_menu_pressed", Callable(self, "load_main_menu"))
+		level_select_scene.connect("back_to_menu_pressed", load_chapter_select)
 
 func load_level(level_data: Resource):
 	active_level = level_data
@@ -67,9 +78,9 @@ func load_level(level_data: Resource):
 	if level_scene.has_signal("level_completed"):
 		level_scene.connect("level_completed", _on_level_completed)
 	if level_scene.has_signal("back_to_menu_pressed"):
-		level_scene.connect("back_to_menu_pressed", load_level_select)
+		level_scene.connect("back_to_menu_pressed", load_level_select.bind(level_data.chapter_index))
 	if level_scene.has_signal("level_select_pressed"):
-		level_scene.connect("level_select_pressed", load_level_select)
+		level_scene.connect("level_select_pressed", load_level_select.bind(level_data.chapter_index))
 	if level_scene.has_signal("next_level_pressed"):
 		level_scene.connect("next_level_pressed", _on_next_level_pressed)
 	if level_scene.has_signal("gallery_pressed"):

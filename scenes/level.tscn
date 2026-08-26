@@ -25,13 +25,14 @@ color = Color(1, 1, 1, 1)
 
 [node name="LevelLabel" type="Label" parent="."]
 layout_mode = 1
+visible = false
 anchors_preset = 10
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -260.0
-offset_top = 10.0
+offset_top = 14.0
 offset_right = 260.0
-offset_bottom = 40.0
+offset_bottom = 42.0
 grow_horizontal = 2
 text = "Уровень"
 horizontal_alignment = 1
@@ -42,10 +43,10 @@ layout_mode = 1
 anchors_preset = 10
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -490.0
-offset_top = 48.0
-offset_right = 490.0
-offset_bottom = 102.0
+offset_left = -430.0
+offset_top = 52.0
+offset_right = 430.0
+offset_bottom = 96.0
 grow_horizontal = 2
 
 [node name="InfoRow" type="HBoxContainer" parent="InfoBanner"]
@@ -54,16 +55,16 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_left = 18.0
-offset_top = 8.0
+offset_top = 6.0
 offset_right = -18.0
-offset_bottom = -8.0
+offset_bottom = -6.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/separation = 18
 
 [node name="SizeLabel" type="Label" parent="InfoBanner/InfoRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(210, 0)
+custom_minimum_size = Vector2(170, 0)
 text = "ПОЛЕ  5 × 5"
 vertical_alignment = 1
 theme_override_font_sizes/font_size = 14
@@ -71,15 +72,15 @@ theme_override_font_sizes/font_size = 14
 [node name="Legend" type="Label" parent="InfoBanner/InfoRow"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "ЛКМ/ПКМ — клетка  ·  Shift — строка  ·  Ctrl — столбец"
+text = "Название уровня"
 horizontal_alignment = 1
 vertical_alignment = 1
 theme_override_colors/font_color = Color(0.75, 0.8, 0.9, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 12
 
 [node name="TimerLabel" type="Label" parent="InfoBanner/InfoRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(150, 0)
+custom_minimum_size = Vector2(120, 0)
 text = "ВРЕМЯ  00:00"
 horizontal_alignment = 2
 vertical_alignment = 1
@@ -127,9 +128,96 @@ layout_mode = 1
 anchors_preset = 0
 offset_left = 10.0
 offset_top = 10.0
-offset_right = 90.0
-offset_bottom = 40.0
+offset_right = 120.0
+offset_bottom = 54.0
 text = "Назад"
+
+[node name="DebugSolveButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -68.0
+offset_right = 156.0
+offset_bottom = -24.0
+grow_vertical = 0
+text = "⚙ Решить"
+tooltip_text = "Мгновенно решить уровень (только debug)"
+theme_override_font_sizes/font_size = 14
+
+[node name="HelpButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -294.0
+offset_top = -68.0
+offset_right = -250.0
+offset_bottom = -24.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "?"
+tooltip_text = "Как играть"
+theme_override_font_sizes/font_size = 20
+
+[node name="HintButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -242.0
+offset_top = -68.0
+offset_right = -198.0
+offset_bottom = -24.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "💡"
+tooltip_text = "Показать подходящую клетку"
+theme_override_font_sizes/font_size = 18
+
+[node name="HintStatus" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -520.0
+offset_top = -98.0
+offset_right = -24.0
+offset_bottom = -74.0
+grow_horizontal = 0
+grow_vertical = 0
+horizontal_alignment = 2
+theme_override_colors/font_color = Color(0.28, 0.3, 0.34, 1)
+theme_override_font_sizes/font_size = 13
+
+[node name="CheckStatus" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -330.0
+offset_top = -66.0
+offset_right = 330.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+visible = false
+
+[node name="Label" type="Label" parent="CheckStatus"]
+layout_mode = 2
+text = "Результат проверки"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 16
 
 [node name="VictoryBanner" type="Panel" parent="."]
 layout_mode = 1
@@ -138,13 +226,85 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -330.0
+offset_left = -390.0
 offset_top = -150.0
-offset_right = 330.0
+offset_right = 390.0
 offset_bottom = 150.0
 grow_horizontal = 2
 grow_vertical = 2
 visible = false
+
+[node name="GuideOverlay" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+visible = false
+
+[node name="Dim" type="ColorRect" parent="GuideOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.04, 0.05, 0.07, 0.55)
+mouse_filter = 1
+
+[node name="GuidePanel" type="Panel" parent="GuideOverlay"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -350.0
+offset_top = -190.0
+offset_right = 350.0
+offset_bottom = 190.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Title" type="Label" parent="GuideOverlay/GuidePanel"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 32.0
+offset_top = 25.0
+offset_right = -32.0
+offset_bottom = 62.0
+text = "Как играть"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 26
+
+[node name="GuideText" type="Label" parent="GuideOverlay/GuidePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 48.0
+offset_top = 78.0
+offset_right = -48.0
+offset_bottom = -70.0
+text = "Числа показывают длину групп закрашенных клеток в строке или столбце.\nМежду группами всегда есть хотя бы одна пустая клетка.\n\nЛКМ — закрасить  ·  ПКМ — поставить крестик\nЗажмите кнопку мыши и ведите по полю — быстрое заполнение\nShift + кнопка мыши — вся строка\nCtrl + кнопка мыши — весь столбец\nЛампочка — подсветить одну подходящую клетку"
+vertical_alignment = 1
+autowrap_mode = 2
+theme_override_colors/font_color = Color(0.18, 0.2, 0.24, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="CloseButton" type="Button" parent="GuideOverlay/GuidePanel"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 220.0
+offset_top = -58.0
+offset_right = -220.0
+offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "Понятно"
 
 [node name="VictoryMessage" type="Label" parent="VictoryBanner"]
 layout_mode = 1
@@ -181,15 +341,21 @@ alignment = 1
 
 [node name="LevelSelectButton" type="Button" parent="VictoryBanner/VictoryActions"]
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Выбор уровня"
+theme_override_font_sizes/font_size = 14
 
 [node name="NextLevelButton" type="Button" parent="VictoryBanner/VictoryActions"]
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Следующий уровень"
+theme_override_font_sizes/font_size = 14
 
 [node name="GalleryButton" type="Button" parent="VictoryBanner/VictoryActions"]
 layout_mode = 2
+size_flags_horizontal = 3
 text = "Открыть галерею"
+theme_override_font_sizes/font_size = 14
 
 [node name="DebugLabel" type="Label" parent="."]
 layout_mode = 1

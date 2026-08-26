@@ -18,7 +18,7 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.925, 0.941, 0.973, 1)
+color = Color(0.85, 0.43, 0.59, 1)
 mouse_filter = 2
 
 [node name="Margin" type="MarginContainer" parent="."]
@@ -26,10 +26,10 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-theme_override_constants/margin_left = 54
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 54
-theme_override_constants/margin_bottom = 20
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 18
 
 [node name="Page" type="VBoxContainer" parent="Margin"]
 layout_mode = 2
@@ -46,50 +46,54 @@ theme_override_font_sizes/font_size = 14
 layout_mode = 2
 [node name="BackButton" type="Button" parent="Margin/Page/TopBar"]
 layout_mode = 2
+custom_minimum_size = Vector2(180, 44)
 text = "←  Главное меню"
 [node name="Spacer" type="Control" parent="Margin/Page/TopBar"]
 layout_mode = 2
 size_flags_horizontal = 3
 [node name="Title" type="Label" parent="Margin/Page/TopBar"]
 layout_mode = 2
-text = "ВЫБЕРИТЕ УРОВЕНЬ"
+text = "УРОВНИ"
 theme_override_colors/font_color = Color(0.075, 0.11, 0.2, 1)
-theme_override_font_sizes/font_size = 26
+theme_override_font_sizes/font_size = 28
 
 [node name="ChapterTabs" type="HBoxContainer" parent="Margin/Page"]
 layout_mode = 2
+visible = false
 theme_override_constants/separation = 10
 
 [node name="ChapterHeader" type="PanelContainer" parent="Margin/Page"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 70)
+visible = false
+custom_minimum_size = Vector2(0, 48)
 
 [node name="HeaderMargin" type="MarginContainer" parent="Margin/Page/ChapterHeader"]
 layout_mode = 2
-theme_override_constants/margin_left = 22
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 22
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 5
 
 [node name="HeaderRow" type="HBoxContainer" parent="Margin/Page/ChapterHeader/HeaderMargin"]
 layout_mode = 2
-theme_override_constants/separation = 18
+theme_override_constants/separation = 10
 [node name="ChapterIcon" type="Label" parent="Margin/Page/ChapterHeader/HeaderMargin/HeaderRow"]
 layout_mode = 2
-custom_minimum_size = Vector2(72, 0)
+custom_minimum_size = Vector2(42, 0)
 text = "🌿"
 horizontal_alignment = 1
 vertical_alignment = 1
-theme_override_font_sizes/font_size = 38
+theme_override_font_sizes/font_size = 25
 [node name="Copy" type="VBoxContainer" parent="Margin/Page/ChapterHeader/HeaderMargin/HeaderRow"]
 layout_mode = 2
 size_flags_horizontal = 3
 alignment = 1
 [node name="ChapterTitle" type="Label" parent="Margin/Page/ChapterHeader/HeaderMargin/HeaderRow/Copy"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 18
 [node name="ChapterSubtitle" type="Label" parent="Margin/Page/ChapterHeader/HeaderMargin/HeaderRow/Copy"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 12
 [node name="Progress" type="Label" parent="Margin/Page/ChapterHeader/HeaderMargin/HeaderRow"]
 layout_mode = 2
 custom_minimum_size = Vector2(80, 0)
@@ -109,5 +113,5 @@ layout_mode = 2
 alignment = 2
 [node name="ContinueButton" type="Button" parent="Margin/Page/Footer"]
 layout_mode = 2
-custom_minimum_size = Vector2(260, 46)
+custom_minimum_size = Vector2(260, 44)
 text = "Продолжить"

@@ -47,7 +47,7 @@ func _add_gallery_card(chapter: int) -> void:
 	var info: Dictionary = LevelCatalog.CHAPTERS[chapter]
 	var unlocked := progress.is_chapter_completed(chapter)
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(0, 350)
+	panel.custom_minimum_size = Vector2(0, 330)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var accent: Color = info.color
 	panel.add_theme_stylebox_override("panel", _make_card_style(accent, unlocked))
@@ -63,7 +63,7 @@ func _add_gallery_card(chapter: int) -> void:
 	var chapter_label := Label.new()
 	chapter_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	chapter_label.text = "ГЛАВА %02d" % (chapter + 1)
-	chapter_label.add_theme_color_override("font_color", Color("d7deef") if unlocked else Color("98a2b7"))
+	chapter_label.add_theme_color_override("font_color", accent.darkened(0.18) if unlocked else Color("7b8089"))
 	chapter_label.add_theme_font_size_override("font_size", 14)
 	chapter_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(chapter_label)
@@ -82,14 +82,14 @@ func _add_gallery_card(chapter: int) -> void:
 		image.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		image.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		image.add_theme_font_size_override("font_size", 70)
-		image.add_theme_color_override("font_color", Color.WHITE if unlocked else Color("8d97ab"))
+		image.add_theme_color_override("font_color", accent if unlocked else Color("9a9da3"))
 		image.text = "%s\nPNG" % info.icon if unlocked else "🔒\n?"
 		image.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		box.add_child(image)
 	var title := Label.new()
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 24)
-	title.add_theme_color_override("font_color", Color.WHITE if unlocked else Color("c1c7d4"))
+	title.add_theme_color_override("font_color", Color("191c22") if unlocked else Color("6f737b"))
 	title.text = info.reward if unlocked else "Тайна главы %d" % (chapter + 1)
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	box.add_child(title)
@@ -125,10 +125,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _make_card_style(accent: Color, unlocked: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = accent.darkened(0.58) if unlocked else Color("222a3b")
-	style.border_color = accent if unlocked else Color("485166")
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(20)
+	style.bg_color = Color("fffaf2") if unlocked else Color("ded8d5")
+	style.border_color = accent if unlocked else Color("8c7f85")
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(10)
 	style.content_margin_left = 28
 	style.content_margin_top = 24
 	style.content_margin_right = 28
